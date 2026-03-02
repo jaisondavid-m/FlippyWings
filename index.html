@@ -76,6 +76,22 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
+// Sound effects
+const sounds = {
+  flap:      new Audio('assets/sounds/flap.mp3'),
+  die:       new Audio('assets/sounds/die.mp3'),
+  mainTheme: new Audio('assets/sounds/MainTheme.mp3')
+};
+sounds.mainTheme.loop   = true;
+sounds.mainTheme.volume = 0.5;
+sounds.flap.volume      = 0.7;
+sounds.die.volume       = 0.8;
+
+function playSound(snd) {
+  snd.currentTime = 0;
+  snd.play().catch(() => {});
+}
+
 canvas.width = 400;
 canvas.height = 600;
 
@@ -153,12 +169,26 @@ function spawnPipe() {
   const minTop = 80;
   const maxTop = canvas.height - PIPE_GAP - 180;
   const topHeight = getRandomInt(minTop, maxTop);
-  pipes.push({ x: canvas.width, topHeight, bottomY: topHeight + PIPE_GAP, width: PIPE_WIDTH, scored: false });
+  const vy = score >= 20 ? (Math.random() < 0.5 ? 1 : -1) * (1 + Math.random() * 1.5) : 0;
+  pipes.push({ x: canvas.width, topHeight, bottomY: topHeight + PIPE_GAP, width: PIPE_WIDTH, scored: false, vy });
 }
 
 function updatePipes(currentTime) {
   if (currentTime - lastPipeTime > PIPE_INTERVAL) { spawnPipe(); lastPipeTime = currentTime; }
-  pipes.forEach(p => p.x -= PIPE_SPEED);
+  const minTop = 60;
+  const maxTop = canvas.height - PIPE_GAP - 160;
+  pipes.forEach(p => {
+    p.x -= PIPE_SPEED;
+    if (score >= 20 && p.vy === 0) {
+      p.vy = (Math.random() < 0.5 ? 1 : -1) * (1 + Math.random() * 1.5);
+    }
+    if (score >= 20 && p.vy !== 0) {
+      p.topHeight += p.vy;
+      if (p.topHeight <= minTop) { p.topHeight = minTop; p.vy = Math.abs(p.vy); }
+      if (p.topHeight >= maxTop) { p.topHeight = maxTop; p.vy = -Math.abs(p.vy); }
+      p.bottomY = p.topHeight + PIPE_GAP;
+    }
+  });
   pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
 }
 
@@ -267,16 +297,27 @@ function startGame() {
   groundX = 0;
   gameState = 'playing';
   hideUI();
+  sounds.die.pause();
+  sounds.die.currentTime = 0;
+  playSound(sounds.mainTheme);
 }
 
 function triggerGameOver() {
   if (gameState !== 'playing') return;
   gameState = 'dead';
   bird.velocity = -3;
+  sounds.mainTheme.pause();
+  sounds.mainTheme.currentTime = 0;
+  playSound(sounds.die);
   showGameOverUI();
 }
 
-function flap() { if (gameState === 'playing') bird.velocity = bird.jumpStrength; }
+function flap() {
+  if (gameState === 'playing') {
+    bird.velocity = bird.jumpStrength;
+    playSound(sounds.flap);
+  }
+}
 
 canvas.addEventListener('click', flap);
 canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive: false });
@@ -385,3 +426,4 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
+
