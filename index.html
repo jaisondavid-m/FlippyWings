@@ -7,7 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; }
+  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -49,11 +49,11 @@ const bird = {
   width: 40,
   height: 30,
   x: canvas.width / 2 - 20,
-  baseY: canvas.height * 0.35,
   y: canvas.height * 0.35,
-  autoFlyTime: 0,
-  autoFlySpeed: 0.025,
-  autoFlyAmplitude: 18,
+  velocity: 0,
+  gravity: 0.25,
+  jumpStrength: -6,
+  rotation: 0,
   currentFrame: 0,
   lastFrameTime: 0,
   frameInterval: 100,
@@ -63,6 +63,16 @@ const bird = {
     { x: 264, y: 64,  width: 17, height: 12 }
   ]
 };
+
+function flap() {
+  bird.velocity = bird.jumpStrength;
+}
+
+canvas.addEventListener('click', flap);
+canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive: false });
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
+});
 
 function drawBackground() {
   ctx.fillStyle = '#70c5ce';
@@ -113,6 +123,7 @@ function drawBird(currentTime) {
 
   ctx.save();
   ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+  ctx.rotate((bird.rotation * Math.PI) / 180);
 
   if (spriteLoaded) {
     const frame = bird.frames[bird.currentFrame];
@@ -141,8 +152,25 @@ function loop(currentTime) {
   if (bgX <= -backgroundSprite.width) bgX = 0;
   groundX -= 1.5;
   if (groundX <= -20) groundX = 0;
-  bird.autoFlyTime += bird.autoFlySpeed;
-  bird.y = bird.baseY + Math.sin(bird.autoFlyTime) * bird.autoFlyAmplitude;
+
+  // Bird physics
+  bird.velocity += bird.gravity;
+  if (bird.velocity > 8) bird.velocity = 8;
+  bird.y += bird.velocity;
+
+  // Clamp to ground
+  if (bird.y + bird.height >= GROUND_Y) {
+    bird.y = GROUND_Y - bird.height;
+    bird.velocity = 0;
+  }
+  // Clamp to ceiling
+  if (bird.y < 0) {
+    bird.y = 0;
+    bird.velocity = 0;
+  }
+
+  // Rotation based on velocity
+  bird.rotation = Math.min(Math.max(bird.velocity * 5, -30), 90);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
@@ -156,4 +184,3 @@ requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
