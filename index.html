@@ -33,18 +33,22 @@ window.addEventListener('resize', resize);
 
 const GROUND_Y = canvas.height - 80;
 
+// Shared sprite sheet
 const spriteSheet = new Image();
 let spriteLoaded = false;
 spriteSheet.onload = () => spriteLoaded = true;
 spriteSheet.src = 'assets/images/flappybirdassets.png';
 
+// Background
 let bgX = 0;
 const bgSpeed = 0.3;
 const backgroundSprite = { x: 0, y: 0, width: 144, height: 256 };
 
+// Ground
 let groundX = 0;
 const groundSprite = { x: 146, y: 0, width: 154, height: 56 };
 
+// Bird
 const bird = {
   width: 40,
   height: 30,
@@ -64,10 +68,114 @@ const bird = {
   ]
 };
 
+// Pipe sprites (from reference)
+const pipeSprites = {
+  top:    { x: 302, y: 0, width: 26, height: 135 },
+  bottom: { x: 330, y: 0, width: 26, height: 121 }
+};
+
+// Pipes
+const PIPE_WIDTH = 70;
+const PIPE_GAP = 160;
+const PIPE_SPEED = 1.5;
+const PIPE_INTERVAL = 1800; // ms
+
+let pipes = [];
+let lastPipeTime = 0;
+
+function getRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function spawnPipe() {
+  const minTop = 80;
+  const maxTop = canvas.height - PIPE_GAP - 180;
+  const topHeight = getRandomInt(minTop, maxTop);
+  pipes.push({
+    x: canvas.width,
+    topHeight: topHeight,
+    bottomY: topHeight + PIPE_GAP,
+    width: PIPE_WIDTH
+  });
+}
+
+function updatePipes(currentTime) {
+  if (currentTime - lastPipeTime > PIPE_INTERVAL) {
+    spawnPipe();
+    lastPipeTime = currentTime;
+  }
+  pipes.forEach(p => p.x -= PIPE_SPEED);
+  pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
+}
+
+function drawPipes() {
+  pipes.forEach(p => {
+    const pipeX = Math.round(p.x);
+    const pipeW = Math.round(PIPE_WIDTH);
+
+    if (spriteLoaded) {
+      const capH = 12;
+      const topSpr = pipeSprites.top;
+      const btmSpr = pipeSprites.bottom;
+
+      // --- Top pipe ---
+      const topBodySrcH = topSpr.height - capH;
+      const topBodyDrawH = Math.round(p.topHeight - capH);
+      if (topBodyDrawH > 0) {
+        for (let y = 0; y < topBodyDrawH; y += topBodySrcH) {
+          const h = Math.min(topBodySrcH, topBodyDrawH - y);
+          ctx.drawImage(spriteSheet,
+            topSpr.x, topSpr.y, topSpr.width, h,
+            pipeX, Math.round(y), pipeW, Math.round(h)
+          );
+        }
+      }
+      // Top cap
+      ctx.drawImage(spriteSheet,
+        topSpr.x, topSpr.y + topSpr.height - capH, topSpr.width, capH,
+        pipeX - 3, Math.round(p.topHeight - capH), pipeW + 6, capH
+      );
+
+      // --- Bottom pipe ---
+      const bottomY = Math.round(p.bottomY);
+      // Bottom cap
+      ctx.drawImage(spriteSheet,
+        btmSpr.x, btmSpr.y, btmSpr.width, capH,
+        pipeX - 3, bottomY, pipeW + 6, capH
+      );
+      // Bottom body
+      const btmBodySrcH = btmSpr.height - capH;
+      const btmBodyStartY = bottomY + capH;
+      const btmBodyDrawH = Math.round(canvas.height - btmBodyStartY);
+      if (btmBodyDrawH > 0) {
+        for (let y = 0; y < btmBodyDrawH; y += btmBodySrcH) {
+          const h = Math.min(btmBodySrcH, btmBodyDrawH - y);
+          ctx.drawImage(spriteSheet,
+            btmSpr.x, btmSpr.y + capH, btmSpr.width, h,
+            pipeX, Math.round(btmBodyStartY + y), pipeW, Math.round(h)
+          );
+        }
+      }
+
+    } else {
+      // Fallback pipes
+      ctx.fillStyle = '#73BF2E';
+      ctx.fillRect(pipeX, 0, pipeW, p.topHeight);
+      ctx.fillStyle = '#8BC34A';
+      ctx.fillRect(pipeX - 5, p.topHeight - 30, pipeW + 10, 30);
+
+      ctx.fillStyle = '#73BF2E';
+      ctx.fillRect(pipeX, p.bottomY, pipeW, canvas.height - p.bottomY);
+      ctx.fillStyle = '#8BC34A';
+      ctx.fillRect(pipeX - 5, p.bottomY, pipeW + 10, 30);
+    }
+  });
+}
+
+// Input
 function flap() {
   bird.velocity = bird.jumpStrength;
 }
-
 canvas.addEventListener('click', flap);
 canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive: false });
 document.addEventListener('keydown', (e) => {
@@ -77,7 +185,6 @@ document.addEventListener('keydown', (e) => {
 function drawBackground() {
   ctx.fillStyle = '#70c5ce';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   if (spriteLoaded) {
     const cropY = 60, cropH = 150;
     const scale = 2.7;
@@ -120,11 +227,9 @@ function drawBird(currentTime) {
     bird.currentFrame = (bird.currentFrame + 1) % bird.frames.length;
     bird.lastFrameTime = currentTime;
   }
-
   ctx.save();
   ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
   ctx.rotate((bird.rotation * Math.PI) / 180);
-
   if (spriteLoaded) {
     const frame = bird.frames[bird.currentFrame];
     ctx.drawImage(spriteSheet,
@@ -148,6 +253,7 @@ function drawBird(currentTime) {
 }
 
 function loop(currentTime) {
+  // Scroll
   bgX -= bgSpeed;
   if (bgX <= -backgroundSprite.width) bgX = 0;
   groundX -= 1.5;
@@ -157,23 +263,17 @@ function loop(currentTime) {
   bird.velocity += bird.gravity;
   if (bird.velocity > 8) bird.velocity = 8;
   bird.y += bird.velocity;
-
-  // Clamp to ground
-  if (bird.y + bird.height >= GROUND_Y) {
-    bird.y = GROUND_Y - bird.height;
-    bird.velocity = 0;
-  }
-  // Clamp to ceiling
-  if (bird.y < 0) {
-    bird.y = 0;
-    bird.velocity = 0;
-  }
-
-  // Rotation based on velocity
+  if (bird.y + bird.height >= GROUND_Y) { bird.y = GROUND_Y - bird.height; bird.velocity = 0; }
+  if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
   bird.rotation = Math.min(Math.max(bird.velocity * 5, -30), 90);
 
+  // Pipes
+  updatePipes(currentTime);
+
+  // Draw
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
+  drawPipes();
   drawGround();
   drawBird(currentTime);
 
