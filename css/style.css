@@ -3,33 +3,42 @@
 ───────────────────────────────────────── */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  background: #000;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+html, body {
+  width: 100%;
+  height: 100%;
   overflow: hidden;
+  /* Sky-blue matches the game's own sky fill (#70c5ce) so any exposed
+     area left/right of the canvas blends seamlessly – no black bars */
+  background: #70c5ce;
   font-family: 'Arial Black', Arial, sans-serif;
 }
 
+/* ─────────────────────────────────────────
+   CANVAS  –  correct aspect ratio, no CSS stretching
+───────────────────────────────────────── */
 canvas {
   display: block;
+  position: fixed;   /* JS sets left/top to centre it */
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   cursor: pointer;
+  z-index: 0;
 }
+
+/* Side panels – not used in this layout */
+#panel-left, #panel-right { display: none !important; }
 
 /* ─────────────────────────────────────────
    UI OVERLAY
 ───────────────────────────────────────── */
 #ui {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  /* left / top / width / height are set by resize() in config.js */
   display: flex;
   justify-content: center;
   align-items: center;
   pointer-events: none;
+  z-index: 3;
 }
 
 #overlay {
@@ -94,7 +103,7 @@ canvas {
    SCORE BOARD
 ───────────────────────────────────────── */
 #scoreBoard {
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   border: 3px solid #f5a623;
   border-radius: 18px;
   padding: 16px 36px;
@@ -102,7 +111,8 @@ canvas {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 28px rgba(245,166,35,0.22), 0 8px 28px rgba(0,0,0,0.65);
 }
 .sb-row {
   display: flex;
@@ -179,6 +189,45 @@ canvas {
   font-weight: 900;
   text-shadow: 1px 1px 0 #000, 0 0 8px rgba(255, 215, 0, 0.6);
   pointer-events: none;
+}
+
+/* ─────────────────────────────────────────
+   DESKTOP SCALING  (wide + tall enough)
+───────────────────────────────────────── */
+@media (min-width: 840px) and (min-height: 600px) {
+  #startBtn {
+    padding: 18px 72px;
+    font-size: 30px;
+    border-radius: 36px;
+    box-shadow: 0 8px 0 #a05e00, 0 10px 28px rgba(0,0,0,0.5);
+  }
+
+  #gameOverText {
+    font-size: 64px;
+  }
+
+  .sb-row {
+    width: 260px;
+    font-size: 22px;
+  }
+
+  #scoreBoard {
+    padding: 22px 52px;
+    gap: 12px;
+    border-width: 4px;
+    border-radius: 22px;
+  }
+
+  #pauseBtn {
+    font-size: 26px;
+    padding: 10px 18px;
+    top: 16px; left: 16px;
+  }
+
+  #coinHUD {
+    font-size: 22px;
+    top: 16px; right: 18px;
+  }
 }
 
 /* ─────────────────────────────────────────

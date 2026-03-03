@@ -16,7 +16,7 @@ function spawnPipe(now) {
   const maxTop = canvas.height - PIPE_GAP - 180;
   const topH   = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
   pipes.push({
-    x:         canvas.width,
+    x:         canvas.width + previewWidth,
     topHeight: topH,
     bottomY:   topH + PIPE_GAP,
     scored:    false,
@@ -30,7 +30,7 @@ function updatePipes(now) {
     lastPipeTime = now;
   }
   pipes.forEach(p => (p.x -= PIPE_SPEED));
-  pipes = pipes.filter(p => p.x + PIPE_WIDTH > -10);
+  pipes = pipes.filter(p => p.x + PIPE_WIDTH > -(previewWidth + 10));
 }
 
 function checkPipeCollision() {

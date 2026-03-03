@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Flippy Wings</title>
   <link rel="stylesheet" href="css/style.css">
-  <!-- REMOVED INLINE STYLES (moved to css/style.css) -->
-<style>/* legacy placeholder — keep tag so replace below targets it cleanly */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  <!-- All visual styles live in css/style.css -->
+<!--
 body {
   background: #000;
   display: flex;
@@ -23,8 +22,6 @@ canvas {
   image-rendering: crisp-edges;
   cursor: pointer;
 }
-
-/* ── UI overlay ── */
 #ui {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -42,7 +39,6 @@ canvas {
 }
 #overlay.hidden { display: none; }
 
-/* Title */
 #gameTitle {
   color: #fff;
   font-size: 36px;
@@ -56,8 +52,6 @@ canvas {
   0%,100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
 }
-
-/* Game Over */
 #gameOverText {
   color: #FF3B30;
   font-size: 44px;
@@ -162,10 +156,47 @@ canvas {
   left: 50%;
   transform: translateX(-50%);
 }
-</style>
+-->
 </head>
 <body>
+
+<!-- Desktop left panel -->
+<aside id="panel-left">
+  <div class="panel-card">
+    <h3 class="panel-heading">🎮 Controls</h3>
+    <ul class="ctrl-list">
+      <li><kbd>Space</kbd> / <kbd>↑</kbd> Fly</li>
+      <li><kbd>P</kbd> / <kbd>K</kbd> Pause</li>
+      <li><kbd>Esc</kbd> Unpause</li>
+      <li><span class="ctrl-icon">Click / Tap</span> Fly</li>
+    </ul>
+  </div>
+  <div class="panel-card">
+    <h3 class="panel-heading">🚀 Tips</h3>
+    <ul class="ctrl-list tips">
+      <li>Grab 🪙 coins between pipes</li>
+      <li>Survive rocket waves!</li>
+      <li>Beat your best score</li>
+    </ul>
+  </div>
+</aside>
+
+<canvas id="pastCanvas"></canvas>
 <canvas id="gameCanvas"></canvas>
+<canvas id="previewCanvas"></canvas>
+
+<!-- Desktop right panel -->
+<aside id="panel-right">
+  <div class="panel-card" id="desktop-scores">
+    <h3 class="panel-heading">🏆 Records</h3>
+    <div class="ds-row"><span>Best</span><span id="ds-best">0</span></div>
+    <div class="ds-row"><span>Wallet</span><span id="ds-wallet">0</span></div>
+  </div>
+  <div class="panel-card">
+    <h3 class="panel-heading">About</h3>
+    <p class="panel-about">Flippy Wings — tap or press Space to keep your bird in the air and weave through the pipes.</p>
+  </div>
+</aside>
 
 <div id="ui">
   <!-- Pause button shown during play -->
@@ -201,5 +232,4 @@ canvas {
 <script src="js/input.js"></script>
 <script src="js/game.js"></script>
 </body>
-</html>
 </html>

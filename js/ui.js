@@ -2,6 +2,14 @@
    DOM  UI  HELPERS
 ───────────────────────────────────────── */
 
+/** Sync the desktop side-panel score display. */
+function updateDesktopScores() {
+  const best   = document.getElementById('ds-best');
+  const wallet = document.getElementById('ds-wallet');
+  if (best)   best.textContent   = bestScore;
+  if (wallet) wallet.textContent = walletCoins;
+}
+
 /** Show the start / title screen UI. */
 function showStartUI() {
   const overlay  = document.getElementById('overlay');
@@ -19,6 +27,7 @@ function showStartUI() {
 
   overlay.classList.remove('hidden');
   overlay.classList.add('start-mode');
+  updateDesktopScores();
 }
 
 /** Show game-over results screen. */
@@ -42,6 +51,7 @@ function showGameOverUI() {
 
   startBtn.textContent = 'RESTART';
   overlay.classList.remove('hidden');
+  updateDesktopScores();
 }
 
 /** Hide the overlay while the player is actively playing. */
