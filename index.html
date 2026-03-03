@@ -5,432 +5,282 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Flippy Wings</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
-  canvas { display: block; image-rendering: pixelated; image-rendering: crisp-edges; cursor: pointer; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  font-family: 'Arial Black', Arial, sans-serif;
+}
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  cursor: pointer;
+}
 
-  #ui {
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    pointer-events: none;
-  }
-  #overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 16px;
-    pointer-events: all;
-  }
-  #overlay.hidden { display: none; }
-  #gameOverText {
-    color: #fff;
-    font-family: 'Arial Black', Arial, sans-serif;
-    font-size: 42px;
-    font-weight: 900;
-    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
-    letter-spacing: 2px;
-  }
-  #scoreDisplay {
-    color: #fff;
-    font-family: 'Arial Black', Arial, sans-serif;
-    font-size: 22px;
-    font-weight: 700;
-    text-shadow: 2px 2px 0 #000;
-  }
-  #startBtn {
-    background: #f5a623;
-    color: #fff;
-    border: none;
-    border-radius: 30px;
-    padding: 14px 48px;
-    font-size: 22px;
-    font-family: 'Arial Black', Arial, sans-serif;
-    font-weight: 900;
-    letter-spacing: 1px;
-    cursor: pointer;
-    box-shadow: 0 6px 0 #c47a0a, 0 8px 16px rgba(0,0,0,0.4);
-    transition: transform 0.1s, box-shadow 0.1s;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
-  }
-  #startBtn:active {
-    transform: translateY(3px);
-    box-shadow: 0 3px 0 #c47a0a;
-  }
-  #gameTitle {
-    color: #fff;
-    font-family: 'Arial Black', Arial, sans-serif;
-    font-size: 34px; font-weight: 900;
-    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
-    letter-spacing: 2px; text-align: center;
-  }
-  #scoreBoard {
-    background: rgba(0,0,0,0.65);
-    border: 3px solid #f5a623;
-    border-radius: 16px;
-    padding: 14px 32px;
-    display: flex; flex-direction: column; align-items: center; gap: 8px;
-  }
-  .sb-row {
-    display: flex; justify-content: space-between; width: 180px;
-    font-family: 'Arial Black', Arial, sans-serif;
-    color: #fff; font-size: 18px; text-shadow: 1px 1px 0 #000;
-  }
-  .sb-row span:last-child { color: #FFD700; }
-  #tapsHint {
-    color: rgba(255,255,255,0.85);
-    font-family: 'Arial Black', Arial, sans-serif;
-    font-size: 14px; text-shadow: 1px 1px 0 #000;
-    letter-spacing: 1px;
-    animation: pulse 1s ease-in-out infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
-  .hidden { display: none !important; }
+/* ── UI overlay ── */
+#ui {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+#overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  pointer-events: all;
+}
+#overlay.hidden { display: none; }
+
+/* Title */
+#gameTitle {
+  color: #fff;
+  font-size: 36px;
+  font-weight: 900;
+  text-shadow: 3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+  letter-spacing: 3px;
+  text-align: center;
+  animation: titleBob 2s ease-in-out infinite;
+}
+@keyframes titleBob {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Game Over */
+#gameOverText {
+  color: #FF3B30;
+  font-size: 44px;
+  font-weight: 900;
+  text-shadow: 3px 3px 0 #000;
+  letter-spacing: 2px;
+  animation: shake 0.4s ease;
+}
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  25% { transform: translateX(-8px); }
+  75% { transform: translateX(8px); }
+}
+
+/* Score board */
+#scoreBoard {
+  background: rgba(0,0,0,0.7);
+  border: 3px solid #f5a623;
+  border-radius: 18px;
+  padding: 16px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  backdrop-filter: blur(4px);
+}
+.sb-row {
+  display: flex;
+  justify-content: space-between;
+  width: 200px;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 1px 1px 0 #000;
+}
+.sb-row span:last-child { color: #FFD700; }
+
+/* Buttons */
+#startBtn {
+  background: linear-gradient(to bottom, #f5a623, #e08c10);
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 52px;
+  font-size: 22px;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 6px 0 #a05e00, 0 8px 20px rgba(0,0,0,0.5);
+  transition: transform 0.1s, box-shadow 0.1s;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+}
+#startBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #a05e00; }
+#startBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a05e00; }
+
+#tapsHint {
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+  text-shadow: 1px 1px 0 #000;
+  letter-spacing: 1px;
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+/* Pause overlay button */
+#pauseBtn {
+  position: absolute;
+  top: 12px; left: 12px;
+  background: rgba(0,0,0,0.55);
+  border: 2px solid rgba(255,255,255,0.4);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 20px;
+  padding: 6px 12px;
+  cursor: pointer;
+  pointer-events: all;
+  transition: background 0.15s;
+}
+#pauseBtn:hover { background: rgba(0,0,0,0.8); }
+
+/* Coin HUD top-right */
+#coinHUD {
+  position: absolute;
+  top: 10px; right: 12px;
+  color: #FFD700;
+  font-size: 16px;
+  font-weight: 900;
+  text-shadow: 1px 1px 0 #000, 0 0 8px rgba(255,215,0,0.6);
+  pointer-events: none;
+}
+
+.hidden { display: none !important; }
 </style>
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
+
 <div id="ui">
+  <!-- Pause button shown during play -->
+  <button id="pauseBtn" class="hidden">⏸</button>
+  <!-- Coin counter during play -->
+  <div id="coinHUD" class="hidden">🪙 0</div>
+
   <div id="overlay">
     <div id="gameTitle" class="hidden">FLIPPY WINGS</div>
     <div id="gameOverText" class="hidden">GAME OVER</div>
     <div id="scoreBoard" class="hidden">
       <div class="sb-row"><span>SCORE</span><span id="sbScore">0</span></div>
-      <div class="sb-row"><span>BEST</span><span id="sbBest">0</span></div>
-      <div class="sb-row"><span>COINS</span><span id="sbCoins">0</span></div>
-      <div class="sb-row"><span>ALL TIME</span><span id="sbTotal">0</span></div>
+      <div class="sb-row"><span>BEST</span>  <span id="sbBest">0</span></div>
+      <div class="sb-row"><span>COINS</span> <span id="sbCoins">0</span></div>
+      <div class="sb-row"><span>WALLET</span><span id="sbTotal">0</span></div>
     </div>
     <button id="startBtn">START</button>
     <div id="tapsHint" class="hidden">TAP / SPACE to fly</div>
   </div>
 </div>
+
 <script>
+/* ══════════════════════════════════════════
+   CANVAS + RESIZE
+══════════════════════════════════════════ */
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+const ctx    = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-// Sound effects
-const sounds = {
-  flap:      new Audio('assets/sounds/flap.mp3'),
-  die:       new Audio('assets/sounds/die.mp3'),
-  hit:       new Audio('assets/sounds/flappy-bird-hit-sound.mp3'),
-  point:     new Audio('assets/sounds/point.mp3'),
-  swoosh:    new Audio('assets/sounds/swoosh.mp3'),
-  blast:     new Audio('assets/sounds/blast.mp3'),
-  mainTheme: new Audio('assets/sounds/MainTheme.mp3')
-};
-sounds.mainTheme.loop   = true;
-sounds.mainTheme.volume = 0.45;
-sounds.flap.volume      = 0.7;
-sounds.die.volume       = 0.8;
-sounds.hit.volume       = 0.8;
-sounds.point.volume     = 0.6;
-sounds.swoosh.volume    = 0.5;
-sounds.blast.volume     = 0.7;
-
-function playSound(snd) {
-  snd.currentTime = 0;
-  snd.play().catch(() => {});
-}
-
-// Extra image assets
-function _loadImg(src) { const i = new Image(); i.src = src; return i; }
-const imgs = {
-  coin:  _loadImg('assets/images/coin.png'),
-  blast: _loadImg('assets/images/blast.png'),
-  home:  _loadImg('assets/images/flappy-bird-home.png'),
-};
-const imgLoaded = {};
-Object.keys(imgs).forEach(k => {
-  imgs[k].onload  = () => { imgLoaded[k] = true; };
-  imgs[k].onerror = () => { imgLoaded[k] = false; };
-});
-
-// Extra state
-let coinCount  = 0;
-let totalCoins = parseInt(localStorage.getItem('flippy-total-coins') || '0');
-let bestScore  = parseInt(localStorage.getItem('flippy-best') || '0');
-let PIPE_SPEED = 1.5;
-let PIPE_GAP   = 165;
-let floaters   = [];
-let coins = [], coinSpawnCount = 0;
-
-canvas.width = 400;
+canvas.width  = 400;
 canvas.height = 600;
 
 const ui = document.getElementById('ui');
-
 function resize() {
-  const vh = window.innerHeight, vw = window.innerWidth;
+  const vw = window.innerWidth, vh = window.innerHeight;
   const aspect = 400 / 600;
   let w = vh * aspect, h = vh;
   if (w > vw) { w = vw; h = vw / aspect; }
-  canvas.style.width = w + 'px';
+  canvas.style.width  = w + 'px';
   canvas.style.height = h + 'px';
-  ui.style.width = w + 'px';
+  ui.style.width  = w + 'px';
   ui.style.height = h + 'px';
   ui.style.left = ((vw - w) / 2) + 'px';
-  ui.style.top = ((vh - h) / 2) + 'px';
+  ui.style.top  = ((vh - h) / 2) + 'px';
 }
 resize();
 window.addEventListener('resize', resize);
 
 const GROUND_Y = canvas.height - 80;
 
+/* ══════════════════════════════════════════
+   ASSETS
+══════════════════════════════════════════ */
 const spriteSheet = new Image();
-let spriteLoaded = false;
-spriteSheet.onload = () => spriteLoaded = true;
+let   spriteLoaded = false;
+spriteSheet.onload  = () => { spriteLoaded = true; };
 spriteSheet.src = 'assets/images/flappybirdassets.png';
 
-let bgX = 0;
-const bgSpeed = 0.3;
-const backgroundSprite = { x: 0, y: 0, width: 144, height: 256 };
-
-let groundX = 0;
-const groundSprite = { x: 146, y: 0, width: 154, height: 56 };
-
-const bird = {
-  width: 40, height: 30,
-  x: canvas.width / 2 - 20,
-  y: canvas.height * 0.35,
-  velocity: 0,
-  gravity: 0.25,
-  jumpStrength: -6,
-  rotation: 0,
-  currentFrame: 0,
-  lastFrameTime: 0,
-  frameInterval: 100,
-  frames: [
-    { x: 223, y: 124, width: 17, height: 12 },
-    { x: 264, y: 90,  width: 17, height: 12 },
-    { x: 264, y: 64,  width: 17, height: 12 }
-  ],
-  getBounds() {
-    const pad = 5;
-    return {
-      x: this.x + pad,
-      y: this.y + pad,
-      width: this.width - pad * 2,
-      height: this.height - pad * 2
-    };
-  }
+function loadImg(src) { const i = new Image(); i.src = src; return i; }
+const imgs = {
+  coin:   loadImg('assets/images/coin.png'),
+  blast:  loadImg('assets/images/blast.png'),
+  home:   loadImg('assets/images/flappy-bird-home.png'),
+  rocket: loadImg('assets/images/rocket.png'),
 };
+const imgOK = {};
+Object.keys(imgs).forEach(k => {
+  imgs[k].onload  = () => { imgOK[k] = true; };
+  imgs[k].onerror = () => { imgOK[k] = false; };
+});
 
-const pipeSprites = {
-  top:    { x: 302, y: 0, width: 26, height: 135 },
-  bottom: { x: 330, y: 0, width: 26, height: 121 }
+/* ══════════════════════════════════════════
+   SOUNDS
+══════════════════════════════════════════ */
+function makeAudio(src, vol = 0.7) {
+  const a = new Audio(src);
+  a.volume = vol;
+  return a;
+}
+const sounds = {
+  flap:      makeAudio('assets/sounds/flap.mp3',    0.7),
+  die:       makeAudio('assets/sounds/die.mp3',     0.8),
+  hit:       makeAudio('assets/sounds/flappy-bird-hit-sound.mp3', 0.8),
+  point:     makeAudio('assets/sounds/point.mp3',   0.6),
+  swoosh:    makeAudio('assets/sounds/swoosh.mp3',  0.5),
+  blast:     makeAudio('assets/sounds/blast.mp3',   0.7),
+  mainTheme: makeAudio('assets/sounds/MainTheme.mp3', 0.45),
 };
+sounds.mainTheme.loop = true;
+function playSound(snd) { try { snd.currentTime = 0; snd.play().catch(()=>{}); } catch(e){} }
 
-const PIPE_WIDTH = 70;
-const PIPE_INTERVAL = 1800;
+/* ══════════════════════════════════════════
+   PERSISTENT STATE
+══════════════════════════════════════════ */
+let bestScore   = parseInt(localStorage.getItem('flippy-best')        || '0');
+let totalCoins  = parseInt(localStorage.getItem('flippy-total-coins') || '0');
+// walletCoins = spendable balance (will be reduced by store purchases later)
+let walletCoins = parseInt(localStorage.getItem('flippy-coins')       || '0');
 
-let pipes = [];
-let lastPipeTime = 0;
-let score = 0;
-
+/* ══════════════════════════════════════════
+   GAME STATE
+══════════════════════════════════════════ */
 // 'start' | 'playing' | 'dead'
 let gameState = 'start';
+let isPaused  = false;
+let score     = 0;
+let coinCount = 0;
 
-function getRandomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function spawnPipe() {
-  const minTop = 80;
-  const maxTop = canvas.height - PIPE_GAP - 180;
-  const topHeight = getRandomInt(minTop, maxTop);
-  const pipe = { x: canvas.width, topHeight, bottomY: topHeight + PIPE_GAP, width: PIPE_WIDTH, scored: false, vy: 0 };
-  pipes.push(pipe);
-  // Spawn a continuous horizontal stream of coins in the gap on every pipe
-  const gapMid  = topHeight + PIPE_GAP / 2;
-  const spread  = Math.min(PIPE_GAP / 2 - 18, 36);
-  const coinCount_spawned = 5;
-  const coinSpacing = 34;
-  const startX  = canvas.width + PIPE_WIDTH + 10;
-  for (let i = 0; i < coinCount_spawned; i++) {
-    const offsetY = (i % 2 === 0 ? 1 : -1) * (i < 2 ? 0 : spread * 0.5);
-    coins.push({
-      x: startX + i * coinSpacing,
-      y: gapMid + offsetY - 12,
-      w: 22, h: 22,
-      bobOffset: (Math.PI * 2 / coinCount_spawned) * i,
-      angle: 0, collected: false, alpha: 1
-    });
-  }
-}
-
-function updatePipes(currentTime) {
-  if (currentTime - lastPipeTime > PIPE_INTERVAL) { spawnPipe(); lastPipeTime = currentTime; }
-  pipes.forEach(p => { p.x -= PIPE_SPEED; });
-  pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
-}
-
-function checkCollision() {
-  const pad = 5;
-  const bx1 = bird.x + pad, bx2 = bird.x + bird.width - pad;
-  const by1 = bird.y + pad, by2 = bird.y + bird.height - pad;
-  for (const p of pipes) {
-    if (bx2 > p.x && bx1 < p.x + PIPE_WIDTH) {
-      if (by1 < p.topHeight || by2 > p.bottomY) return true;
-    }
-  }
-  return false;
-}
-
-function checkScore() {
-  for (const p of pipes) {
-    if (!p.scored && p.x + PIPE_WIDTH < bird.x) {
-      p.scored = true; score++;
-      playSound(sounds.point);
-    }
-  }
-}
-
-function drawPipes() {
-  pipes.forEach(p => {
-    const pipeX = Math.round(p.x), pipeW = Math.round(PIPE_WIDTH);
-    if (spriteLoaded) {
-      const capH = 12;
-      const topSpr = pipeSprites.top, btmSpr = pipeSprites.bottom;
-
-      const topBodySrcH = topSpr.height - capH;
-      const topBodyDrawH = Math.round(p.topHeight - capH);
-      if (topBodyDrawH > 0) {
-        for (let y = 0; y < topBodyDrawH; y += topBodySrcH) {
-          const h = Math.min(topBodySrcH, topBodyDrawH - y);
-          ctx.drawImage(spriteSheet, topSpr.x, topSpr.y, topSpr.width, h, pipeX, Math.round(y), pipeW, Math.round(h));
-        }
-      }
-      ctx.drawImage(spriteSheet, topSpr.x, topSpr.y + topSpr.height - capH, topSpr.width, capH, pipeX - 3, Math.round(p.topHeight - capH), pipeW + 6, capH);
-
-      const bottomY = Math.round(p.bottomY);
-      ctx.drawImage(spriteSheet, btmSpr.x, btmSpr.y, btmSpr.width, capH, pipeX - 3, bottomY, pipeW + 6, capH);
-      const btmBodySrcH = btmSpr.height - capH;
-      const btmBodyStartY = bottomY + capH;
-      const btmBodyDrawH = Math.round(canvas.height - btmBodyStartY);
-      if (btmBodyDrawH > 0) {
-        for (let y = 0; y < btmBodyDrawH; y += btmBodySrcH) {
-          const h = Math.min(btmBodySrcH, btmBodyDrawH - y);
-          ctx.drawImage(spriteSheet, btmSpr.x, btmSpr.y + capH, btmSpr.width, h, pipeX, Math.round(btmBodyStartY + y), pipeW, Math.round(h));
-        }
-      }
-    } else {
-      ctx.fillStyle = '#73BF2E';
-      ctx.fillRect(pipeX, 0, pipeW, p.topHeight);
-      ctx.fillStyle = '#8BC34A';
-      ctx.fillRect(pipeX - 5, p.topHeight - 30, pipeW + 10, 30);
-      ctx.fillStyle = '#73BF2E';
-      ctx.fillRect(pipeX, p.bottomY, pipeW, canvas.height - p.bottomY);
-      ctx.fillStyle = '#8BC34A';
-      ctx.fillRect(pipeX - 5, p.bottomY, pipeW + 10, 30);
-    }
-  });
-}
-
-function drawHUD() {
-  if (gameState !== 'playing') return;
-  ctx.save();
-  // Score centre
-  ctx.fillStyle   = '#fff';
-  ctx.strokeStyle = '#000';
-  ctx.lineWidth   = 3;
-  ctx.font        = 'bold 36px Arial';
-  ctx.textAlign   = 'center';
-  ctx.strokeText(score, canvas.width / 2, 60);
-  ctx.fillText(score, canvas.width / 2, 60);
-  // Session coin counter top-right
-  ctx.textAlign   = 'right';
-  ctx.font        = 'bold 16px Arial';
-  ctx.strokeText('\uD83E\uDE99 ' + coinCount, canvas.width - 10, 30);
-  ctx.fillStyle   = '#FFD700';
-  ctx.fillText('\uD83E\uDE99 ' + coinCount, canvas.width - 10, 30);
-  ctx.restore();
-}
-
-function showStartUI() {
-  document.getElementById('gameTitle').classList.remove('hidden');
-  document.getElementById('gameOverText').classList.add('hidden');
-  document.getElementById('scoreBoard').classList.add('hidden');
-  document.getElementById('startBtn').textContent = 'START';
-  document.getElementById('tapsHint').classList.remove('hidden');
-  document.getElementById('overlay').classList.remove('hidden');
-}
-
-function showGameOverUI() {
-  document.getElementById('gameTitle').classList.add('hidden');
-  document.getElementById('gameOverText').classList.remove('hidden');
-  document.getElementById('sbScore').textContent = score;
-  document.getElementById('sbBest').textContent  = bestScore;
-  document.getElementById('sbCoins').textContent = coinCount;
-  document.getElementById('sbTotal').textContent = totalCoins;
-  document.getElementById('scoreBoard').classList.remove('hidden');
-  document.getElementById('startBtn').textContent = 'RESTART';
-  document.getElementById('tapsHint').classList.add('hidden');
-  document.getElementById('overlay').classList.remove('hidden');
-}
-
-function hideUI() {
-  document.getElementById('overlay').classList.add('hidden');
-}
-
-function startGame() {
-  bird.x = canvas.width / 2 - 20;
-  bird.y = canvas.height * 0.35;
-  bird.velocity = bird.jumpStrength;
-  bird.rotation = 0;
-  bird.currentFrame = 0;
-  pipes = []; lastPipeTime = 0;
-  score = 0; coinCount = 0;
-  coins = []; coinSpawnCount = 0;
-  floaters = [];
-  bgX = 0; groundX = 0;
-  gameState = 'playing';
-  hideUI();
-  sounds.die.pause(); sounds.die.currentTime = 0;
-  playSound(sounds.swoosh);
-  setTimeout(() => playSound(sounds.mainTheme), 300);
-  rocketSystem.reset();
-}
-
-function triggerGameOver(byPipe) {
-  if (gameState !== 'playing') return;
-  gameState = 'dead';
-  bird.velocity = -3;
-  if (score > bestScore) { bestScore = score; localStorage.setItem('flippy-best', bestScore); }
-  sounds.mainTheme.pause(); sounds.mainTheme.currentTime = 0;
-  if (byPipe) playSound(sounds.hit); else playSound(sounds.die);
-  showGameOverUI();
-}
-
-function flap() {
-  if (gameState === 'playing') {
-    bird.velocity = bird.jumpStrength;
-    playSound(sounds.flap);
-  }
-}
-
-canvas.addEventListener('click', flap);
-canvas.addEventListener('touchstart', (e) => { e.preventDefault(); flap(); }, { passive: false });
-document.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
-});
-document.getElementById('startBtn').addEventListener('click', (e) => { e.stopPropagation(); startGame(); });
-document.getElementById('startBtn').addEventListener('touchstart', (e) => { e.preventDefault(); e.stopPropagation(); startGame(); }, { passive: false });
+/* ══════════════════════════════════════════
+   BACKGROUND / GROUND
+══════════════════════════════════════════ */
+const bgSprite     = { x: 0, y: 0, width: 144, height: 256 };
+const groundSprite = { x: 146, y: 0, width: 154, height: 56 };
+let bgX = 0, groundX = 0;
+const BG_SPEED    = 0.3;
+const GROUND_SPEED = 2;
 
 function drawBackground() {
   ctx.fillStyle = '#70c5ce';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   if (spriteLoaded) {
     const cropY = 60, cropH = 150, scale = 2.7;
-    const scaledW = backgroundSprite.width * scale;
-    const scaledH = cropH * scale;
-    const bgY = GROUND_Y - scaledH;
-    const tiles = Math.ceil(canvas.width / scaledW) + 2;
+    const sw = bgSprite.width * scale, sh = cropH * scale;
+    const byPos = GROUND_Y - sh;
+    const tiles = Math.ceil(canvas.width / sw) + 2;
     for (let i = 0; i < tiles; i++) {
-      ctx.drawImage(spriteSheet, backgroundSprite.x, backgroundSprite.y + cropY, backgroundSprite.width, cropH,
-        bgX * scale + i * scaledW, bgY, scaledW, scaledH);
+      ctx.drawImage(spriteSheet,
+        bgSprite.x, bgSprite.y + cropY, bgSprite.width, cropH,
+        bgX * scale + i * sw, byPos, sw, sh);
     }
   }
 }
@@ -439,8 +289,10 @@ function drawGround() {
   if (spriteLoaded) {
     const tiles = Math.ceil(canvas.width / groundSprite.width) + 1;
     for (let i = 0; i < tiles; i++) {
-      ctx.drawImage(spriteSheet, groundSprite.x, groundSprite.y, groundSprite.width, groundSprite.height,
-        Math.round(groundX + i * groundSprite.width), Math.round(GROUND_Y), groundSprite.width, 80);
+      ctx.drawImage(spriteSheet,
+        groundSprite.x, groundSprite.y, groundSprite.width, groundSprite.height,
+        Math.round(groundX + i * groundSprite.width), GROUND_Y,
+        groundSprite.width, 80);
     }
   } else {
     ctx.fillStyle = '#DEB887';
@@ -450,56 +302,285 @@ function drawGround() {
   }
 }
 
-function drawBird(currentTime) {
-  if (currentTime - bird.lastFrameTime > bird.frameInterval) {
-    bird.currentFrame = (bird.currentFrame + 1) % bird.frames.length;
-    bird.lastFrameTime = currentTime;
+/* ══════════════════════════════════════════
+   BIRD
+══════════════════════════════════════════ */
+const bird = {
+  width: 40, height: 30,
+  x: canvas.width / 2 - 20,
+  y: canvas.height * 0.35,
+  velocity: 0,
+  gravity: 0.25,
+  jumpStrength: -6,
+  rotation: 0,
+  frame: 0, lastFrame: 0, frameInterval: 100,
+  frames: [
+    { x: 223, y: 124, width: 17, height: 12 },
+    { x: 264, y: 90,  width: 17, height: 12 },
+    { x: 264, y: 64,  width: 17, height: 12 },
+  ],
+  getBounds() {
+    const p = 5;
+    return { x: this.x+p, y: this.y+p, width: this.width-p*2, height: this.height-p*2 };
+  }
+};
+
+function drawBird(now) {
+  if (now - bird.lastFrame > bird.frameInterval) {
+    bird.frame = (bird.frame + 1) % bird.frames.length;
+    bird.lastFrame = now;
   }
   ctx.save();
-  ctx.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
-  ctx.rotate((bird.rotation * Math.PI) / 180);
+  ctx.translate(bird.x + bird.width/2, bird.y + bird.height/2);
+  ctx.rotate(bird.rotation * Math.PI / 180);
   if (spriteLoaded) {
-    const frame = bird.frames[bird.currentFrame];
-    ctx.drawImage(spriteSheet, frame.x, frame.y, frame.width, frame.height,
-      -bird.width / 2, -bird.height / 2, bird.width, bird.height);
+    const f = bird.frames[bird.frame];
+    ctx.drawImage(spriteSheet, f.x, f.y, f.width, f.height,
+      -bird.width/2, -bird.height/2, bird.width, bird.height);
   } else {
     ctx.fillStyle = '#f4d03f';
     ctx.beginPath();
-    ctx.ellipse(0, 0, bird.width / 2, bird.height / 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(0, 0, bird.width/2, bird.height/2, 0, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#e8a200';
+    ctx.beginPath();
+    ctx.moveTo(bird.width/2 - 4, -4);
+    ctx.lineTo(bird.width/2 + 8, 0);
+    ctx.lineTo(bird.width/2 - 4, 4);
+    ctx.closePath();
     ctx.fill();
   }
   ctx.restore();
 }
 
-class Rocket {
-  constructor(canvas, rocketImage, imageLoaded, customY = null, customSpeed = null, customXOffset = 0) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-    this.rocketImage = rocketImage;
-    this.imageLoaded = imageLoaded;
-    this.width = 45;
-    this.height = 56;
-    this.x = canvas.width + this.width + customXOffset;
-    if (customY !== null) {
-      this.y = customY;
-    } else {
-      const minY = 60;
-      const maxY = canvas.height - 140;
-      this.y = minY + Math.random() * (maxY - minY);
+function flap() {
+  if (gameState !== 'playing' || isPaused) return;
+  bird.velocity = bird.jumpStrength;
+  playSound(sounds.flap);
+}
+
+/* ══════════════════════════════════════════
+   PIPES
+══════════════════════════════════════════ */
+const PIPE_WIDTH = 70;
+const PIPE_GAP   = 165;
+let   PIPE_SPEED = 2;
+const PIPE_INTERVAL = 1800;
+
+const pipeSpr = {
+  top:    { x: 302, y: 0, width: 26, height: 135 },
+  bottom: { x: 330, y: 0, width: 26, height: 121 },
+};
+
+let pipes = [], lastPipeTime = 0;
+
+function spawnPipe(now) {
+  const minTop = 80, maxTop = canvas.height - PIPE_GAP - 180;
+  const topH = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
+  pipes.push({ x: canvas.width, topHeight: topH, bottomY: topH + PIPE_GAP, scored: false });
+  spawnCoinsForPipe(topH);
+}
+
+function updatePipes(now) {
+  if (now - lastPipeTime > PIPE_INTERVAL) { spawnPipe(now); lastPipeTime = now; }
+  pipes.forEach(p => p.x -= PIPE_SPEED);
+  pipes = pipes.filter(p => p.x + PIPE_WIDTH > -10);
+}
+
+function checkPipeCollision() {
+  const p = 5;
+  const bx1 = bird.x+p, bx2 = bird.x+bird.width-p;
+  const by1 = bird.y+p, by2 = bird.y+bird.height-p;
+  for (const p2 of pipes) {
+    if (bx2 > p2.x && bx1 < p2.x + PIPE_WIDTH) {
+      if (by1 < p2.topHeight || by2 > p2.bottomY) return true;
     }
-    this.speed = customSpeed !== null ? customSpeed : (1.5 + Math.random() * 1);
+  }
+  return false;
+}
+
+function checkPipeScore() {
+  for (const p of pipes) {
+    if (!p.scored && p.x + PIPE_WIDTH < bird.x) {
+      p.scored = true;
+      score++;
+      playSound(sounds.point);
+      spawnFloatingText('+1', bird.x + bird.width, bird.y - 10, '#FFFFFF', 20);
+    }
+  }
+}
+
+function drawPipes() {
+  pipes.forEach(p => {
+    const px = Math.round(p.x);
+    if (spriteLoaded) {
+      const capH = 12;
+      const ts = pipeSpr.top, bs = pipeSpr.bottom;
+      // Top pipe body
+      const topBodyH = Math.max(0, p.topHeight - capH);
+      if (topBodyH > 0) {
+        for (let y = 0; y < topBodyH; y += ts.height - capH) {
+          const h = Math.min(ts.height - capH, topBodyH - y);
+          ctx.drawImage(spriteSheet, ts.x, ts.y, ts.width, h, px, y, PIPE_WIDTH, h);
+        }
+      }
+      ctx.drawImage(spriteSheet, ts.x, ts.y+ts.height-capH, ts.width, capH,
+        px-3, p.topHeight-capH, PIPE_WIDTH+6, capH);
+      // Bottom pipe
+      ctx.drawImage(spriteSheet, bs.x, bs.y, bs.width, capH,
+        px-3, p.bottomY, PIPE_WIDTH+6, capH);
+      const btmBodyH = Math.max(0, canvas.height - p.bottomY - capH);
+      for (let y = 0; y < btmBodyH; y += bs.height - capH) {
+        const h = Math.min(bs.height - capH, btmBodyH - y);
+        ctx.drawImage(spriteSheet, bs.x, bs.y+capH, bs.width, h,
+          px, p.bottomY+capH+y, PIPE_WIDTH, h);
+      }
+    } else {
+      ctx.fillStyle = '#5cb85c';
+      ctx.fillRect(px, 0, PIPE_WIDTH, p.topHeight);
+      ctx.fillStyle = '#4cae4c';
+      ctx.fillRect(px-5, p.topHeight-28, PIPE_WIDTH+10, 28);
+      ctx.fillStyle = '#5cb85c';
+      ctx.fillRect(px, p.bottomY, PIPE_WIDTH, canvas.height);
+      ctx.fillStyle = '#4cae4c';
+      ctx.fillRect(px-5, p.bottomY, PIPE_WIDTH+10, 28);
+    }
+  });
+}
+
+function clearAllPipes() {
+  pipes = [];
+  lastPipeTime = performance.now();
+}
+
+/* ══════════════════════════════════════════
+   COINS
+══════════════════════════════════════════ */
+let coins = [];
+
+function spawnCoinsForPipe(topH) {
+  // Only spawn coins ~30% of the time — keep them rare
+  if (Math.random() > 0.30) return;
+
+  const gapMid  = topH + PIPE_GAP / 2;
+  // 1 or 2 coins per occasion
+  const count   = Math.random() < 0.5 ? 1 : 2;
+  const spacing = 80;                       // wide gap between the pair
+  const startX  = canvas.width + PIPE_WIDTH + 30;
+  const spread  = Math.min(PIPE_GAP / 2 - 22, 28);
+  for (let i = 0; i < count; i++) {
+    const oY = (i % 2 === 0 ? 1 : -1) * spread * 0.4;
+    coins.push({
+      x: startX + i * spacing,
+      y: gapMid + oY - 11,
+      w: 22, h: 22,
+      bobOffset: (Math.PI * 2 / Math.max(count, 1)) * i,
+      angle: 0,
+      collected: false,
+      alpha: 1,
+    });
+  }
+}
+
+function updateCoins() {
+  const bb = bird.getBounds();
+  coins.forEach(c => {
+    c.x -= PIPE_SPEED;
+    c.bobOffset += 0.06;
+    c.angle += 0.04;
+    if (c.collected) { c.y -= 1.5; c.alpha -= 0.05; return; }
+    if (bb.x < c.x+c.w && bb.x+bb.width > c.x && bb.y < c.y+c.h && bb.y+bb.height > c.y) {
+      c.collected = true;
+      coinCount++;
+      totalCoins++;
+      walletCoins++;
+      localStorage.setItem('flippy-total-coins', totalCoins);
+      localStorage.setItem('flippy-coins', walletCoins);
+      playSound(sounds.point);
+      spawnFloatingText('+🪙', c.x + c.w/2, c.y, '#FFD700', 20);
+      updateCoinHUD();
+    }
+  });
+  coins = coins.filter(c => c.x + c.w > -10 && c.alpha > 0);
+}
+
+function drawCoins() {
+  coins.forEach(c => {
+    const cy = c.y + c.h/2 + Math.sin(c.bobOffset) * 3;
+    ctx.save();
+    ctx.globalAlpha = c.alpha;
+    ctx.translate(c.x + c.w/2, cy);
+    ctx.rotate(c.angle);
+    const sx = Math.abs(Math.cos(c.angle));
+    ctx.scale(Math.max(sx, 0.1), 1);
+    if (imgOK.coin) {
+      ctx.drawImage(imgs.coin, -c.w/2, -c.h/2, c.w, c.h);
+    } else {
+      ctx.fillStyle = '#FFD700';
+      ctx.strokeStyle = '#B8860B';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, c.w/2, 0, Math.PI*2);
+      ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#FFF8DC';
+      ctx.font = 'bold 10px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$', 0, 0);
+    }
+    ctx.restore();
+  });
+}
+
+/* ══════════════════════════════════════════
+   FLOATING TEXT
+══════════════════════════════════════════ */
+let floaters = [];
+function spawnFloatingText(text, x, y, color, size) {
+  floaters.push({ text, x, y, color, size, alpha: 1, life: 55 });
+}
+function updateFloaters() {
+  floaters = floaters.filter(f => f.life > 0);
+  floaters.forEach(f => { f.y -= 1.1; f.life--; f.alpha = f.life / 55; });
+}
+function drawFloaters() {
+  floaters.forEach(f => {
+    ctx.save();
+    ctx.globalAlpha = f.alpha;
+    ctx.font = `bold ${f.size}px Arial Black, Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.strokeText(f.text, f.x, f.y);
+    ctx.fillStyle = f.color;
+    ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  });
+}
+
+/* ══════════════════════════════════════════
+   ROCKET SYSTEM  (formation waves)
+══════════════════════════════════════════ */
+class Rocket {
+  constructor(canvas, customY = null, customSpeed = null, xOffset = 0) {
+    this.canvas = canvas;
+    this.width  = 45;
+    this.height = 56;
+    this.x = canvas.width + this.width + xOffset;
+    this.y = customY !== null ? customY
+           : 60 + Math.random() * (canvas.height - 200);
+    this.speed = customSpeed !== null ? customSpeed
+               : 1.8 + Math.random() * 1;
     this.sprite = { x: 138, y: 50, width: 224, height: 400 };
-    this.trail = [];
+    this.trail  = [];
     this.trailTimer = 0;
-    this.warningAlpha = 1;
-    this.warningPhase = 0;
     this.showWarning = true;
-    this.warningDuration = 500;
+    this.warningDuration = 600;
+    this.warningPhase = 0;
+    this.warningAlpha = 1;
     this.spawnTime = Date.now();
     this.velocityY = 0;
     this.affectedByGravity = false;
-    this.gravityStrength = 0.5;
-    this.rotation = 0;
   }
 
   applyGravity() {
@@ -518,236 +599,163 @@ class Rocket {
     this.showWarning = false;
     this.x -= this.speed;
     if (this.affectedByGravity) {
-      this.velocityY += this.gravityStrength;
+      this.velocityY += 0.5;
       this.y += this.velocityY;
-      this.rotation += 0.1;
       this.speed *= 0.98;
     }
     this.trailTimer++;
     if (this.trailTimer % 2 === 0) {
       this.trail.push({
         x: this.x + this.width,
-        y: this.y + this.height / 2 + (Math.random() - 0.5) * 8,
-        size: 3 + Math.random() * 4,
+        y: this.y + this.height/2 + (Math.random()-0.5)*8,
+        size: 3 + Math.random()*4,
         alpha: 0.8,
-        life: 15 + Math.random() * 10,
+        life: 15 + Math.random()*10,
         maxLife: 25,
-        vx: 1 + Math.random() * 2,
-        vy: (Math.random() - 0.5) * 1.5
+        vx: 1 + Math.random()*2,
+        vy: (Math.random()-0.5)*1.5,
       });
     }
-    for (let i = this.trail.length - 1; i >= 0; i--) {
+    for (let i = this.trail.length-1; i >= 0; i--) {
       const p = this.trail[i];
       p.x += p.vx; p.y += p.vy; p.life--;
-      p.alpha = Math.max(0, p.life / p.maxLife) * 0.8;
+      p.alpha = Math.max(0, p.life/p.maxLife)*0.8;
       p.size *= 0.95;
       if (p.life <= 0) this.trail.splice(i, 1);
     }
   }
 
   draw() {
-    const ctx = this.ctx;
+    const c = canvas.getContext('2d');
     if (this.showWarning) {
-      ctx.save();
-      ctx.globalAlpha = this.warningAlpha;
-      const warningX = this.canvas.width - 30;
-      const warningY = this.y + this.height / 2;
-      ctx.fillStyle = '#FF0000';
-      ctx.beginPath();
-      ctx.moveTo(warningX + 15, warningY);
-      ctx.lineTo(warningX, warningY - 10);
-      ctx.lineTo(warningX, warningY + 10);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#FF0000';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'center';
-      ctx.fillText('!', warningX - 8, warningY + 5);
-      ctx.restore();
+      c.save();
+      c.globalAlpha = this.warningAlpha;
+      const wx = canvas.width - 30, wy = this.y + this.height/2;
+      c.fillStyle = '#FF2200';
+      c.beginPath();
+      c.moveTo(wx+15, wy); c.lineTo(wx, wy-10); c.lineTo(wx, wy+10);
+      c.closePath(); c.fill();
+      c.font = 'bold 14px Arial';
+      c.textAlign = 'center';
+      c.fillText('!', wx-8, wy+5);
+      c.restore();
       return;
     }
-    for (const p of this.trail) {
+    // Trail
+    this.trail.forEach(p => {
+      ctx.save();
       ctx.globalAlpha = p.alpha;
-      ctx.fillStyle = '#FFA500';
+      const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size);
+      g.addColorStop(0, '#FFA500');
+      g.addColorStop(0.5, '#FF4500');
+      g.addColorStop(1, 'rgba(255,0,0,0)');
+      ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
       ctx.fill();
-    }
-    ctx.globalAlpha = 1;
+      ctx.restore();
+    });
     ctx.save();
-    ctx.imageSmoothingEnabled = true;
-    ctx.translate(this.x + this.width / 2, this.y + this.height / 2);
-    if (this.affectedByGravity) {
-      ctx.rotate(-Math.PI / 2 + this.rotation);
+    ctx.translate(this.x + this.width/2, this.y + this.height/2);
+    ctx.rotate(-Math.PI/2);
+    if (imgOK.rocket) {
+      ctx.drawImage(imgs.rocket,
+        this.sprite.x, this.sprite.y, this.sprite.width, this.sprite.height,
+        -this.width/2, -this.height/2, this.width, this.height);
     } else {
-      ctx.rotate(-Math.PI / 2);
-    }
-    if (this.imageLoaded && this.rocketImage) {
-      ctx.drawImage(this.rocketImage, this.sprite.x, this.sprite.y, this.sprite.width, this.sprite.height,
-        -this.width / 2, -this.height / 2, this.width, this.height);
-    } else {
-      this._drawFallback(ctx);
+      this._fallback(ctx);
     }
     ctx.restore();
   }
 
-  _drawFallback(ctx) {
-    // Rocket body
-    ctx.fillStyle = '#CC0000';
-    ctx.beginPath();
-    ctx.ellipse(0, 0, this.width / 2, this.height / 2, 0, 0, Math.PI * 2);
-    ctx.fill();
-    // Nose
-    ctx.fillStyle = '#FF0000';
-    ctx.beginPath();
-    ctx.moveTo(this.width / 2, 0);
-    ctx.lineTo(this.width / 2 - 10, -this.height / 2 + 2);
-    ctx.lineTo(this.width / 2 - 10, this.height / 2 - 2);
-    ctx.closePath();
-    ctx.fill();
-    // Fins
-    ctx.fillStyle = '#990000';
-    ctx.beginPath();
-    ctx.moveTo(-this.width / 2, -this.height / 2);
-    ctx.lineTo(-this.width / 2 - 6, -this.height / 2 - 5);
-    ctx.lineTo(-this.width / 2 + 5, 0);
-    ctx.closePath();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.moveTo(-this.width / 2, this.height / 2);
-    ctx.lineTo(-this.width / 2 - 6, this.height / 2 + 5);
-    ctx.lineTo(-this.width / 2 + 5, 0);
-    ctx.closePath();
-    ctx.fill();
-    // Flame
-    ctx.fillStyle = '#FFA500';
-    ctx.beginPath();
-    ctx.moveTo(-this.width / 2, -4);
-    ctx.lineTo(-this.width / 2 - 12 - Math.random() * 5, 0);
-    ctx.lineTo(-this.width / 2, 4);
-    ctx.closePath();
-    ctx.fill();
-    ctx.fillStyle = '#FFFF00';
-    ctx.beginPath();
-    ctx.moveTo(-this.width / 2, -2);
-    ctx.lineTo(-this.width / 2 - 8 - Math.random() * 3, 0);
-    ctx.lineTo(-this.width / 2, 2);
-    ctx.closePath();
-    ctx.fill();
-    // Window
-    ctx.fillStyle = '#87CEEB';
-    ctx.beginPath();
-    ctx.arc(5, 0, 4, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#666'; ctx.lineWidth = 1; ctx.stroke();
+  _fallback(c) {
+    c.fillStyle = '#CC0000';
+    c.beginPath(); c.ellipse(0,0,this.width/2,this.height/2,0,0,Math.PI*2); c.fill();
+    c.fillStyle = '#FF0000';
+    c.beginPath(); c.moveTo(this.width/2,0); c.lineTo(this.width/2-10,-this.height/2+2);
+    c.lineTo(this.width/2-10,this.height/2-2); c.closePath(); c.fill();
+    c.fillStyle = '#FFA500';
+    c.beginPath(); c.moveTo(-this.width/2,-3);
+    c.lineTo(-this.width/2-14-Math.random()*5,0);
+    c.lineTo(-this.width/2,3); c.closePath(); c.fill();
+    c.fillStyle = '#87CEEB';
+    c.beginPath(); c.arc(4,0,4,0,Math.PI*2); c.fill();
   }
 
   getBounds() {
-    return { x: this.x + 4, y: this.y + 2, width: this.width - 8, height: this.height - 4 };
+    return { x: this.x+5, y: this.y+3, width: this.width-10, height: this.height-6 };
   }
 
-  isOffScreen() {
-    return this.x + this.width < -20 || this.y > this.canvas.height + 50;
-  }
-
-  isActive() {
-    return (Date.now() - this.spawnTime) >= this.warningDuration;
-  }
+  isOffScreen() { return this.x + this.width < -20 || this.y > canvas.height + 60; }
+  isActive()    { return (Date.now() - this.spawnTime) >= this.warningDuration; }
 }
 
-class RocketSystem {
-  constructor() {
-    this.canvas = null;
-    this.ctx = null;
-    this.rockets = [];
-    this.explosions = [];
-    this.scoreThreshold = 10;
-    this.nextWaveScore = 10;
-    this.formationsPerWave = 3;
-    this.formationsSpawnedInWave = 0;
-    this.waveActive = false;
-    this.minSpawnInterval = 2500;
-    this.maxSpawnInterval = 4500;
-    this.lastSpawnTime = 0;
-    this.nextSpawnDelay = 0;
-    this.waveWarningTimer = 0;
-    this.waveWarningAlpha = 0;
-    this.spriteLoaded = false;
-    this.rocketImage = new Image();
-    this.rocketImage.onload = () => { this.spriteLoaded = true; };
-    this.rocketImage.onerror = () => {};
-    this.rocketImage.src = 'assets/images/rocket.png';
-  }
+const rocketSystem = {
+  rockets: [],
+  explosions: [],
+  scoreThreshold: 10,
+  nextWaveScore: 10,
+  formationsPerWave: 3,
+  formationsSpawned: 0,
+  waveActive: false,
+  lastSpawnTime: 0,
+  nextSpawnDelay: 0,
+  waveWarningTimer: 0,
+  waveWarningAlpha: 0,
 
-  init(canvas) {
-    this.canvas = canvas;
-    this.ctx = canvas.getContext('2d');
-  }
-
-  update(score) {
+  update(sc) {
     const now = Date.now();
-    if (!this.waveActive && score >= this.nextWaveScore) {
+    if (!this.waveActive && sc >= this.nextWaveScore) {
       this._startWave();
       clearAllPipes();
     }
-    if (this.waveActive && this.formationsSpawnedInWave < this.formationsPerWave) {
+    if (this.waveActive && this.formationsSpawned < this.formationsPerWave) {
       if (now - this.lastSpawnTime >= this.nextSpawnDelay) {
         this._spawnFormation();
         this.lastSpawnTime = now;
-        this.formationsSpawnedInWave++;
-        this.nextSpawnDelay = this.minSpawnInterval + Math.random() * (this.maxSpawnInterval - this.minSpawnInterval);
-        if (this.formationsSpawnedInWave >= this.formationsPerWave) this._endWave();
+        this.formationsSpawned++;
+        this.nextSpawnDelay = 2500 + Math.random() * 2000;
+        if (this.formationsSpawned >= this.formationsPerWave) this._endWave();
       }
     }
-    for (let i = this.rockets.length - 1; i >= 0; i--) {
+    for (let i = this.rockets.length-1; i >= 0; i--) {
       this.rockets[i].update();
       if (this.rockets[i].isOffScreen()) this.rockets.splice(i, 1);
     }
     this._updateExplosions();
-  }
+  },
 
   _startWave() {
     this.waveActive = true;
-    this.formationsSpawnedInWave = 0;
+    this.formationsSpawned = 0;
     this.lastSpawnTime = Date.now();
-    this.nextSpawnDelay = 1000 + Math.random() * 1000;
-    this.waveWarningTimer = 120;
+    this.nextSpawnDelay = 1200 + Math.random() * 800;
+    this.waveWarningTimer = 130;
     this.waveWarningAlpha = 1;
-  }
+  },
 
   _endWave() {
     this.waveActive = false;
     this.nextWaveScore += 15;
-  }
+  },
 
   _spawnFormation() {
-    const rocketHeight = 56;
-    const gapHeight = 150;
-    const topMargin = 60;
-    const bottomMargin = 140;
-    const playableHeight = this.canvas.height - topMargin - bottomMargin;
-    const zoneHeight = (playableHeight - gapHeight) / 3;
-    const gapPosition = Math.random() < 0.5 ? 1 : 2;
-    const formationSpeed = 1.8 + Math.random() * 0.7;
-    const xOffsets = [0, 100 + Math.random() * 50, 220 + Math.random() * 80];
-    for (let i = xOffsets.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [xOffsets[i], xOffsets[j]] = [xOffsets[j], xOffsets[i]];
-    }
-    let yPositions = [];
-    if (gapPosition === 1) {
-      yPositions.push(topMargin + Math.random() * 30);
-      yPositions.push(topMargin + zoneHeight + gapHeight + Math.random() * 30);
-      yPositions.push(this.canvas.height - bottomMargin - rocketHeight - Math.random() * 30);
+    const rH = 56, gap = 150, topM = 60, btmM = 140;
+    const playH = canvas.height - topM - btmM;
+    const zoneH = (playH - gap) / 3;
+    const gapPos = Math.random() < 0.5 ? 1 : 2;
+    const speed  = 1.8 + Math.random() * 0.7;
+    const xOff   = [0, 100+Math.random()*50, 220+Math.random()*80];
+    let yPos;
+    if (gapPos === 1) {
+      yPos = [topM + Math.random()*30, topM + zoneH + gap + Math.random()*30, canvas.height - btmM - rH - Math.random()*30];
     } else {
-      yPositions.push(topMargin + Math.random() * 30);
-      yPositions.push(topMargin + zoneHeight + Math.random() * 30);
-      yPositions.push(this.canvas.height - bottomMargin - rocketHeight - Math.random() * 30);
+      yPos = [topM + Math.random()*30, topM + zoneH + Math.random()*30, canvas.height - btmM - rH - Math.random()*30];
     }
     for (let i = 0; i < 3; i++) {
-      this.rockets.push(new Rocket(this.canvas, this.rocketImage, this.spriteLoaded, yPositions[i], formationSpeed, xOffsets[i]));
+      this.rockets.push(new Rocket(canvas, yPos[i], speed, xOff[i]));
     }
-  }
+  },
 
   checkCollision(bird) {
     const bb = bird.getBounds();
@@ -755,237 +763,383 @@ class RocketSystem {
       const r = this.rockets[i];
       if (!r.isActive()) continue;
       const rb = r.getBounds();
-      if (bb.x < rb.x + rb.width && bb.x + bb.width > rb.x &&
-          bb.y < rb.y + rb.height && bb.y + bb.height > rb.y) {
-        this._spawnExplosion(r.x + r.width / 2, r.y + r.height / 2);
+      if (bb.x < rb.x+rb.width && bb.x+bb.width > rb.x &&
+          bb.y < rb.y+rb.height && bb.y+bb.height > rb.y) {
+        this._spawnExplosion(r.x+r.width/2, r.y+r.height/2);
         this.rockets.splice(i, 1);
         return true;
       }
     }
     return false;
-  }
+  },
 
   _spawnExplosion(x, y) {
     playSound(sounds.blast);
-    const colors = ['#FF4500', '#FFA500', '#FFD700', '#FF0000', '#FFFF00'];
-    const explosion = { particles: [], flashAlpha: 1, flashTimer: 10, x, y };
-    for (let i = 0; i < 20; i++) {
-      const angle = (Math.PI * 2 / 20) * i;
-      const speed = 2 + Math.random() * 5;
-      explosion.particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
-        size: 3 + Math.random() * 4, alpha: 1, life: 30, maxLife: 30,
-        color: colors[i % colors.length], gravity: 0.08, decay: 0.96 });
+    const cols = ['#FF4500','#FFA500','#FFD700','#FF0000','#FFFF00'];
+    const exp = { particles:[], flashAlpha:1, flashTimer:10, x, y };
+    for (let i = 0; i < 25; i++) {
+      const angle = (Math.PI*2/25)*i;
+      const sp = 2 + Math.random()*6;
+      exp.particles.push({
+        x, y, vx:Math.cos(angle)*sp, vy:Math.sin(angle)*sp,
+        size:3+Math.random()*5, alpha:1, life:30+Math.random()*20, maxLife:50,
+        color:cols[i%cols.length], gravity:0.08, decay:0.96
+      });
     }
-    for (let i = 0; i < 6; i++) {
-      const angle = (Math.PI * 2 / 6) * i;
-      explosion.particles.push({ x, y, vx: Math.cos(angle) * 1.5, vy: Math.sin(angle) * 1.5,
-        size: 10, alpha: 0.5, life: 40, maxLife: 40, color: '#555555', gravity: -0.02, decay: 0.97 });
+    for (let i = 0; i < 8; i++) {
+      const angle = Math.random()*Math.PI*2;
+      exp.particles.push({
+        x, y, vx:Math.cos(angle)*1.5, vy:Math.sin(angle)*1.5,
+        size:10, alpha:0.5, life:40, maxLife:40,
+        color:'#555', gravity:-0.02, decay:0.97
+      });
     }
-    explosion.shockwave = { x, y, radius: 5, maxRadius: 80, alpha: 0.8, speed: 4 };
-    explosion.blastImg  = { x, y, alpha: 1, scale: 0.3, growSpeed: 0.15 };
-    this.explosions.push(explosion);
-  }
+    exp.shockwave = { x, y, radius:5, maxRadius:80, alpha:0.8, speed:4 };
+    exp.blastImg  = { x, y, alpha:1, scale:0.3, growSpeed:0.15 };
+    this.explosions.push(exp);
+  },
 
   _updateExplosions() {
-    for (let e = this.explosions.length - 1; e >= 0; e--) {
-      const exp = this.explosions[e];
-      if (exp.flashTimer > 0) { exp.flashTimer--; exp.flashAlpha = exp.flashTimer / 10; }
-      if (exp.shockwave) {
-        exp.shockwave.radius += exp.shockwave.speed;
-        exp.shockwave.alpha *= 0.92;
-        if (exp.shockwave.radius >= exp.shockwave.maxRadius) exp.shockwave = null;
+    for (let e = this.explosions.length-1; e >= 0; e--) {
+      const ex = this.explosions[e];
+      if (ex.flashTimer > 0) { ex.flashTimer--; ex.flashAlpha = ex.flashTimer/10; }
+      if (ex.shockwave) {
+        ex.shockwave.radius += ex.shockwave.speed;
+        ex.shockwave.alpha  *= 0.92;
+        if (ex.shockwave.radius >= ex.shockwave.maxRadius) ex.shockwave = null;
       }
-      if (exp.blastImg) {
-        exp.blastImg.scale += exp.blastImg.growSpeed;
-        exp.blastImg.alpha -= 0.05;
-        if (exp.blastImg.alpha <= 0) exp.blastImg = null;
+      if (ex.blastImg) {
+        ex.blastImg.scale += ex.blastImg.growSpeed;
+        ex.blastImg.alpha -= 0.05;
+        if (ex.blastImg.alpha <= 0) ex.blastImg = null;
       }
       let allDead = true;
-      for (let i = exp.particles.length - 1; i >= 0; i--) {
-        const p = exp.particles[i];
+      for (let i = ex.particles.length-1; i >= 0; i--) {
+        const p = ex.particles[i];
         p.x += p.vx; p.y += p.vy; p.vy += p.gravity;
-        p.vx *= p.decay; p.vy *= p.decay; p.life--;
-        p.alpha = Math.max(0, p.life / p.maxLife); p.size *= 0.98;
-        if (p.life <= 0) exp.particles.splice(i, 1);
+        p.vx *= p.decay; p.vy *= p.decay;
+        p.life--; p.alpha = Math.max(0, p.life/p.maxLife); p.size *= 0.98;
+        if (p.life <= 0) ex.particles.splice(i, 1);
         else allDead = false;
       }
-      if (allDead && exp.flashTimer <= 0 && !exp.shockwave && !exp.blastImg) this.explosions.splice(e, 1);
+      if (allDead && ex.flashTimer <= 0 && !ex.shockwave && !ex.blastImg)
+        this.explosions.splice(e, 1);
     }
-  }
+  },
 
   drawWaveWarning() {
     if (!this.waveWarningTimer || this.waveWarningTimer <= 0) return;
     this.waveWarningTimer--;
-    this.waveWarningAlpha = Math.min(1, this.waveWarningTimer / 30) * (0.6 + 0.4 * Math.sin(this.waveWarningTimer * 0.25));
-    const ctx = this.ctx;
+    this.waveWarningAlpha = Math.min(1, this.waveWarningTimer/30) *
+      (0.6 + 0.4 * Math.sin(this.waveWarningTimer * 0.25));
     ctx.save();
     ctx.globalAlpha = this.waveWarningAlpha;
     const pulse = 1 + 0.08 * Math.sin(this.waveWarningTimer * 0.3);
-    ctx.translate(this.canvas.width / 2, this.canvas.height / 2 - 60);
+    ctx.translate(canvas.width/2, canvas.height/2 - 60);
     ctx.scale(pulse, pulse);
-    ctx.fillStyle = '#FF2200';
+    ctx.fillStyle   = '#FF2200';
     ctx.strokeStyle = '#FFD700';
-    ctx.lineWidth = 3;
-    ctx.font = 'bold 28px Arial Black, Arial';
+    ctx.lineWidth   = 3;
+    ctx.font = 'bold 24px Arial Black, Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.strokeText('⚠ ROCKETS INCOMING! ⚠', 0, 0);
     ctx.fillText('⚠ ROCKETS INCOMING! ⚠', 0, 0);
     ctx.restore();
     ctx.globalAlpha = 1;
-  }
+  },
 
   draw() {
-    const ctx = this.ctx;
-    if (!ctx) return;
     this.drawWaveWarning();
     for (const r of this.rockets) r.draw();
-    for (const exp of this.explosions) {
-      if (exp.flashTimer > 0) {
-        ctx.save(); ctx.globalAlpha = exp.flashAlpha * 0.3;
-        ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    for (const ex of this.explosions) {
+      if (ex.flashTimer > 0) {
+        ctx.save(); ctx.globalAlpha = ex.flashAlpha * 0.3;
+        ctx.fillStyle = '#FFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.restore();
       }
-      if (exp.shockwave) {
-        const sw = exp.shockwave;
-        ctx.save(); ctx.globalAlpha = sw.alpha; ctx.strokeStyle = '#FFA500'; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      if (ex.shockwave) {
+        const sw = ex.shockwave;
+        ctx.save(); ctx.globalAlpha = sw.alpha;
+        ctx.strokeStyle = '#FFA500'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI*2); ctx.stroke();
+        ctx.restore();
       }
-      if (exp.blastImg && imgLoaded.blast) {
-        const bi = exp.blastImg;
-        const bw = 80 * bi.scale, bh = 80 * bi.scale;
+      if (ex.blastImg && imgOK.blast) {
+        const bi = ex.blastImg;
+        const bw = 80*bi.scale, bh = 80*bi.scale;
         ctx.save(); ctx.globalAlpha = bi.alpha;
-        ctx.drawImage(imgs.blast, exp.x - bw / 2, exp.y - bh / 2, bw, bh);
+        ctx.drawImage(imgs.blast, ex.x-bw/2, ex.y-bh/2, bw, bh);
         ctx.restore();
       }
-      for (const p of exp.particles) {
+      ex.particles.forEach(p => {
         ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
-        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
-      }
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+      });
     }
     ctx.globalAlpha = 1;
-  }
+  },
 
   reset() {
-    this.rockets = [];
-    this.explosions = [];
+    this.rockets = []; this.explosions = [];
     this.lastSpawnTime = 0;
     this.nextWaveScore = this.scoreThreshold;
-    this.formationsSpawnedInWave = 0;
+    this.formationsSpawned = 0;
     this.waveActive = false;
     this.nextSpawnDelay = 0;
     this.waveWarningTimer = 0;
     this.waveWarningAlpha = 0;
-  }
+  },
+};
+
+/* ══════════════════════════════════════════
+   SCORE HUD
+══════════════════════════════════════════ */
+function drawHUD() {
+  if (gameState !== 'playing') return;
+  ctx.save();
+  ctx.fillStyle = '#fff'; ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+  ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center';
+  ctx.strokeText(score, canvas.width/2, 60);
+  ctx.fillText(score, canvas.width/2, 60);
+  ctx.restore();
 }
 
-const rocketSystem = new RocketSystem();
-rocketSystem.init(canvas);
-
-// ─── COIN UPDATE / DRAW ───
-function updateCoins() {
-  coins.forEach(c => {
-    c.x -= PIPE_SPEED; c.bobOffset += 0.06; c.angle += 0.04;
-    if (c.collected) { c.y -= 1.5; c.alpha -= 0.05; }
-  });
-  const b = bird.getBounds();
-  for (const c of coins) {
-    if (c.collected) continue;
-    if (b.x < c.x + c.w && b.x + b.width > c.x && b.y < c.y + c.h && b.y + b.height > c.y) {
-      c.collected = true; coinCount++; totalCoins++;
-      localStorage.setItem('flippy-total-coins', totalCoins);
-      playSound(sounds.point);
-      spawnFloatingText('+\uD83E\uDE99', c.x + c.w / 2, c.y, '#FFD700', 20);
-    }
-  }
-  coins = coins.filter(c => c.x + c.w > -10 && c.alpha > 0);
+function updateCoinHUD() {
+  const el = document.getElementById('coinHUD');
+  if (el) el.textContent = '🪙 ' + coinCount;
 }
 
-function drawCoins() {
-  coins.forEach(c => {
-    const cy = c.y + c.h / 2 + Math.sin(c.bobOffset) * 3;
-    ctx.save();
-    ctx.globalAlpha = c.alpha;
-    ctx.translate(c.x + c.w / 2, cy);
-    ctx.rotate(c.angle);
-    const sx = Math.abs(Math.cos(c.angle));
-    ctx.scale(Math.max(sx, 0.1), 1);
-    if (imgLoaded.coin) {
-      ctx.drawImage(imgs.coin, -c.w / 2, -c.h / 2, c.w, c.h);
-    } else {
-      ctx.fillStyle = '#FFD700'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.arc(0, 0, c.w / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    }
-    ctx.restore();
-  });
-}
-
-// ─── FLOATING TEXT ───
-function spawnFloatingText(text, x, y, color, size) {
-  floaters.push({ text, x, y, color, size, alpha: 1, life: 55 });
-}
-function drawFloaters() {
-  for (let i = floaters.length - 1; i >= 0; i--) {
-    const f = floaters[i];
-    f.y -= 1.1; f.life--; f.alpha = f.life / 55;
-    if (f.life <= 0) { floaters.splice(i, 1); continue; }
-    ctx.save();
-    ctx.globalAlpha = f.alpha; ctx.fillStyle = f.color;
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
-    ctx.font = `bold ${f.size}px Arial Black, Arial`;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-    ctx.strokeText(f.text, f.x, f.y); ctx.fillText(f.text, f.x, f.y);
-    ctx.restore();
-  }
-}
-
-// ─── HOME SCREEN GRAPHIC ───
+/* ══════════════════════════════════════════
+   HOME SCREEN GRAPHIC
+══════════════════════════════════════════ */
 function drawHomeScreen() {
   if (gameState !== 'start') return;
-  if (imgLoaded.home) {
-    ctx.save();
+  if (imgOK.home) {
     const hw = Math.min(canvas.width * 0.7, 270);
     const ratio = (imgs.home.naturalHeight || 200) / (imgs.home.naturalWidth || 280);
     ctx.drawImage(imgs.home,
-      (canvas.width - hw) / 2, canvas.height * 0.08,
+      (canvas.width - hw)/2, canvas.height * 0.08,
       hw, Math.min(hw * ratio, canvas.height * 0.38));
+  } else {
+    // Fallback: bird silhouette
+    ctx.save();
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(canvas.width/2, canvas.height*0.22, 55, 0, Math.PI*2);
+    ctx.fill();
     ctx.restore();
   }
 }
 
-showStartUI();
+/* ══════════════════════════════════════════
+   PAUSE
+══════════════════════════════════════════ */
+function drawPauseOverlay() {
+  if (!isPaused || gameState !== 'playing') return;
 
-function clearAllPipes() {
-  pipes = [];
-  lastPipeTime = performance.now();
+  // Dim background
+  ctx.fillStyle = 'rgba(0,0,0,0.6)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+
+  // Card
+  const cardW = 260, cardH = 180;
+  ctx.save();
+  ctx.fillStyle = 'rgba(20,20,30,0.92)';
+  ctx.strokeStyle = '#f5a623';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  const r = 18;
+  ctx.moveTo(cx - cardW/2 + r, cy - cardH/2);
+  ctx.arcTo(cx + cardW/2, cy - cardH/2, cx + cardW/2, cy + cardH/2, r);
+  ctx.arcTo(cx + cardW/2, cy + cardH/2, cx - cardW/2, cy + cardH/2, r);
+  ctx.arcTo(cx - cardW/2, cy + cardH/2, cx - cardW/2, cy - cardH/2, r);
+  ctx.arcTo(cx - cardW/2, cy - cardH/2, cx + cardW/2, cy - cardH/2, r);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.save();
+  ctx.textAlign = 'center';
+
+  // ⏸ icon
+  ctx.font = 'bold 38px Arial';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#f5a623';
+  ctx.fillText('⏸  PAUSED', cx, cy - 50);
+
+  // Divider
+  ctx.strokeStyle = 'rgba(245,166,35,0.35)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(cx - 90, cy - 22); ctx.lineTo(cx + 90, cy - 22);
+  ctx.stroke();
+
+  // Score and coins during pause
+  ctx.font = 'bold 16px Arial';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.fillText('SCORE  ' + score + '   🪙  ' + coinCount, cx, cy + 5);
+
+  // Hint
+  ctx.font = 'bold 15px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,0.55)';
+  ctx.fillText('Tap anywhere or press P / K to resume', cx, cy + 50);
+
+  ctx.restore();
 }
 
-function loop(currentTime) {
-  if (gameState === 'playing') {
-    bgX -= 0.3;
-    if (bgX <= -backgroundSprite.width) bgX = 0;
-    groundX -= PIPE_SPEED;
-    if (groundX <= -20) groundX = 0;
-  }
+/* ══════════════════════════════════════════
+   UI HELPERS
+══════════════════════════════════════════ */
+function showStartUI() {
+  document.getElementById('gameTitle').classList.remove('hidden');
+  document.getElementById('gameOverText').classList.add('hidden');
+  document.getElementById('scoreBoard').classList.add('hidden');
+  document.getElementById('startBtn').textContent = 'START';
+  document.getElementById('tapsHint').classList.remove('hidden');
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('pauseBtn').classList.add('hidden');
+  document.getElementById('coinHUD').classList.add('hidden');
+}
 
-  if (gameState === 'playing') {
+function showGameOverUI() {
+  document.getElementById('gameTitle').classList.add('hidden');
+  document.getElementById('gameOverText').classList.remove('hidden');
+  document.getElementById('sbScore').textContent  = score;
+  document.getElementById('sbBest').textContent   = bestScore;
+  document.getElementById('sbCoins').textContent  = coinCount;
+  document.getElementById('sbTotal').textContent  = walletCoins;
+  document.getElementById('scoreBoard').classList.remove('hidden');
+  document.getElementById('startBtn').textContent = 'RESTART';
+  document.getElementById('tapsHint').classList.add('hidden');
+  document.getElementById('overlay').classList.remove('hidden');
+  document.getElementById('pauseBtn').classList.add('hidden');
+  document.getElementById('coinHUD').classList.add('hidden');
+}
+
+function showPlayingUI() {
+  document.getElementById('overlay').classList.add('hidden');
+  document.getElementById('pauseBtn').classList.remove('hidden');
+  document.getElementById('coinHUD').classList.remove('hidden');
+  updateCoinHUD();
+}
+
+function startGame() {
+  score = 0; coinCount = 0;
+  coins = []; floaters = [];
+  pipes = []; lastPipeTime = 0;
+  bgX = 0; groundX = 0;
+  bird.x = canvas.width/2 - 20;
+  bird.y = canvas.height*0.35;
+  bird.velocity = bird.jumpStrength;
+  bird.rotation = 0; bird.frame = 0;
+  gameState = 'playing';
+  isPaused  = false;
+  rocketSystem.reset();
+  document.getElementById('pauseBtn').textContent = '⏸';
+  showPlayingUI();
+  sounds.die.pause(); sounds.die.currentTime = 0;
+  playSound(sounds.swoosh);
+  setTimeout(() => playSound(sounds.mainTheme), 300);
+}
+
+function triggerGameOver(byPipe) {
+  if (gameState !== 'playing') return;
+  gameState = 'dead';
+  bird.velocity = -3;
+  if (score > bestScore) {
+    bestScore = score;
+    localStorage.setItem('flippy-best', bestScore);
+  }
+  sounds.mainTheme.pause(); sounds.mainTheme.currentTime = 0;
+  playSound(byPipe ? sounds.hit : sounds.die);
+  setTimeout(showGameOverUI, 700);
+}
+
+/* ══════════════════════════════════════════
+   INPUT
+══════════════════════════════════════════ */
+canvas.addEventListener('click', () => {
+  if (gameState !== 'playing') return;
+  if (isPaused) { togglePause(); return; }
+  flap();
+});
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (gameState !== 'playing') return;
+  if (isPaused) { togglePause(); return; }
+  flap();
+}, { passive: false });
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') {
+    e.preventDefault();
+    if (gameState === 'playing' && isPaused) { togglePause(); return; }
+    flap();
+  }
+  if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'KeyK') { e.preventDefault(); togglePause(); }
+});
+
+document.getElementById('startBtn').addEventListener('click', e => { e.stopPropagation(); startGame(); });
+document.getElementById('startBtn').addEventListener('touchstart', e => {
+  e.preventDefault(); e.stopPropagation(); startGame();
+}, { passive: false });
+
+function togglePause() {
+  if (gameState !== 'playing') return;
+  isPaused = !isPaused;
+  document.getElementById('pauseBtn').textContent = isPaused ? '▶' : '⏸';
+  if (isPaused) {
+    // Pause music
+    sounds.mainTheme.pause();
+  } else {
+    // Resume music
+    sounds.mainTheme.play().catch(() => {});
+    playSound(sounds.swoosh);
+  }
+}
+document.getElementById('pauseBtn').addEventListener('click', e => { e.stopPropagation(); togglePause(); });
+
+/* ══════════════════════════════════════════
+   GAME LOOP
+══════════════════════════════════════════ */
+function loop(now) {
+  /* ── Update ── */
+  if (gameState === 'playing' && !isPaused) {
+    bgX -= BG_SPEED;
+    if (bgX <= -bgSprite.width) bgX = 0;
+    groundX -= GROUND_SPEED;
+    if (groundX <= -20) groundX = 0;
+
+    // Bird physics
     bird.velocity += bird.gravity;
-    if (bird.velocity > 8) bird.velocity = 8;
+    if (bird.velocity > 10) bird.velocity = 10;
     bird.y += bird.velocity;
     bird.rotation = Math.min(Math.max(bird.velocity * 5, -30), 90);
 
     if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
     if (bird.y + bird.height >= GROUND_Y) { bird.y = GROUND_Y - bird.height; triggerGameOver(true); }
 
-    if (!rocketSystem.waveActive) updatePipes(currentTime);
-    checkScore();
-    if (checkCollision()) { triggerGameOver(true); }
+    // Pipes (suppress during rocket wave)
+    if (!rocketSystem.waveActive) updatePipes(now);
+    checkPipeScore();
+    if (checkPipeCollision()) { triggerGameOver(true); }
 
+    // Coins
     updateCoins();
+    updateFloaters();
 
-    const wasWaveActive = rocketSystem.waveActive;
+    // Rockets
+    const wasWave = rocketSystem.waveActive;
     rocketSystem.update(score);
-    if (wasWaveActive && !rocketSystem.waveActive) { spawnPipe(); lastPipeTime = currentTime; }
+    if (wasWave && !rocketSystem.waveActive) {
+      spawnPipe(now); lastPipeTime = now;
+    }
     if (rocketSystem.checkCollision(bird)) { triggerGameOver(false); }
   }
 
@@ -995,9 +1149,10 @@ function loop(currentTime) {
     bird.y += bird.velocity;
     bird.rotation = 90;
     if (bird.y + bird.height >= GROUND_Y) bird.y = GROUND_Y - bird.height;
-    rocketSystem.update(score);
+    rocketSystem._updateExplosions();
   }
 
+  /* ── Draw ── */
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
   drawHomeScreen();
@@ -1005,13 +1160,16 @@ function loop(currentTime) {
   drawCoins();
   rocketSystem.draw();
   drawGround();
-  drawBird(currentTime);
+  drawBird(now);
   drawHUD();
   drawFloaters();
+  drawPauseOverlay();
 
   requestAnimationFrame(loop);
 }
 
+/* ── Boot ── */
+showStartUI();
 requestAnimationFrame(loop);
 </script>
 </body>
