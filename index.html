@@ -418,7 +418,7 @@ class Rocket {
     this.warningAlpha = 1;
     this.warningPhase = 0;
     this.showWarning = true;
-    this.warningDuration = 800;
+    this.warningDuration = 500;
     this.spawnTime = Date.now();
     this.velocityY = 0;
     this.affectedByGravity = false;
@@ -590,10 +590,12 @@ class RocketSystem {
     this.formationsPerWave = 3;
     this.formationsSpawnedInWave = 0;
     this.waveActive = false;
-    this.minSpawnInterval = 15000;
-    this.maxSpawnInterval = 20000;
+    this.minSpawnInterval = 2500;
+    this.maxSpawnInterval = 4500;
     this.lastSpawnTime = 0;
     this.nextSpawnDelay = 0;
+    this.waveWarningTimer = 0;
+    this.waveWarningAlpha = 0;
     this.spriteLoaded = false;
     this.rocketImage = new Image();
     this.rocketImage.onload = () => { this.spriteLoaded = true; };
@@ -608,7 +610,10 @@ class RocketSystem {
 
   update(score) {
     const now = Date.now();
-    if (!this.waveActive && score >= this.nextWaveScore) this._startWave();
+    if (!this.waveActive && score >= this.nextWaveScore) {
+      this._startWave();
+      clearAllPipes();
+    }
     if (this.waveActive && this.formationsSpawnedInWave < this.formationsPerWave) {
       if (now - this.lastSpawnTime >= this.nextSpawnDelay) {
         this._spawnFormation();
@@ -629,12 +634,14 @@ class RocketSystem {
     this.waveActive = true;
     this.formationsSpawnedInWave = 0;
     this.lastSpawnTime = Date.now();
-    this.nextSpawnDelay = 2000 + Math.random() * 3000;
+    this.nextSpawnDelay = 1000 + Math.random() * 1000;
+    this.waveWarningTimer = 120;
+    this.waveWarningAlpha = 1;
   }
 
   _endWave() {
     this.waveActive = false;
-    this.nextWaveScore += 10;
+    this.nextWaveScore += 15;
   }
 
   _spawnFormation() {
@@ -723,9 +730,32 @@ class RocketSystem {
     }
   }
 
+  drawWaveWarning() {
+    if (!this.waveWarningTimer || this.waveWarningTimer <= 0) return;
+    this.waveWarningTimer--;
+    this.waveWarningAlpha = Math.min(1, this.waveWarningTimer / 30) * (0.6 + 0.4 * Math.sin(this.waveWarningTimer * 0.25));
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.globalAlpha = this.waveWarningAlpha;
+    const pulse = 1 + 0.08 * Math.sin(this.waveWarningTimer * 0.3);
+    ctx.translate(this.canvas.width / 2, this.canvas.height / 2 - 60);
+    ctx.scale(pulse, pulse);
+    ctx.fillStyle = '#FF2200';
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 3;
+    ctx.font = 'bold 28px Arial Black, Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.strokeText('⚠ ROCKETS INCOMING! ⚠', 0, 0);
+    ctx.fillText('⚠ ROCKETS INCOMING! ⚠', 0, 0);
+    ctx.restore();
+    ctx.globalAlpha = 1;
+  }
+
   draw() {
     const ctx = this.ctx;
     if (!ctx) return;
+    this.drawWaveWarning();
     for (const r of this.rockets) r.draw();
     for (const exp of this.explosions) {
       if (exp.flashTimer > 0) {
@@ -754,6 +784,8 @@ class RocketSystem {
     this.formationsSpawnedInWave = 0;
     this.waveActive = false;
     this.nextSpawnDelay = 0;
+    this.waveWarningTimer = 0;
+    this.waveWarningAlpha = 0;
   }
 }
 
@@ -763,6 +795,11 @@ rocketSystem.init(canvas);
 
 // ── Show start UI ──
 showStartUI();
+
+function clearAllPipes() {
+  pipes = [];
+  lastPipeTime = performance.now(); // reset spawn timer
+}
 
 function loop(currentTime) {
   // Scrolling
@@ -782,12 +819,20 @@ function loop(currentTime) {
     if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
     if (bird.y + bird.height >= GROUND_Y) { bird.y = GROUND_Y - bird.height; triggerGameOver(); }
 
-    updatePipes(currentTime);
+    if (!rocketSystem.waveActive) {
+      updatePipes(currentTime);
+    }
     checkScore();
     if (checkCollision()) { triggerGameOver(); }
 
     // Update & collision-check rockets
+    const wasWaveActive = rocketSystem.waveActive;
     rocketSystem.update(score);
+    // Wave just ended — spawn a pipe immediately so player isn't left waiting
+    if (wasWaveActive && !rocketSystem.waveActive) {
+      spawnPipe();
+      lastPipeTime = currentTime;
+    }
     if (rocketSystem.checkCollision(bird)) { triggerGameOver(); }
   }
 
