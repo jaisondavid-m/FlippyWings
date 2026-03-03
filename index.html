@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flappy Scene</title>
+<title>Flippy Wings</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; }
@@ -59,6 +59,34 @@
     transform: translateY(3px);
     box-shadow: 0 3px 0 #c47a0a;
   }
+  #gameTitle {
+    color: #fff;
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 34px; font-weight: 900;
+    text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+    letter-spacing: 2px; text-align: center;
+  }
+  #scoreBoard {
+    background: rgba(0,0,0,0.65);
+    border: 3px solid #f5a623;
+    border-radius: 16px;
+    padding: 14px 32px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .sb-row {
+    display: flex; justify-content: space-between; width: 180px;
+    font-family: 'Arial Black', Arial, sans-serif;
+    color: #fff; font-size: 18px; text-shadow: 1px 1px 0 #000;
+  }
+  .sb-row span:last-child { color: #FFD700; }
+  #tapsHint {
+    color: rgba(255,255,255,0.85);
+    font-family: 'Arial Black', Arial, sans-serif;
+    font-size: 14px; text-shadow: 1px 1px 0 #000;
+    letter-spacing: 1px;
+    animation: pulse 1s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
   .hidden { display: none !important; }
 </style>
 </head>
@@ -66,9 +94,16 @@
 <canvas id="gameCanvas"></canvas>
 <div id="ui">
   <div id="overlay">
+    <div id="gameTitle" class="hidden">FLIPPY WINGS</div>
     <div id="gameOverText" class="hidden">GAME OVER</div>
-    <div id="scoreDisplay" class="hidden"></div>
+    <div id="scoreBoard" class="hidden">
+      <div class="sb-row"><span>SCORE</span><span id="sbScore">0</span></div>
+      <div class="sb-row"><span>BEST</span><span id="sbBest">0</span></div>
+      <div class="sb-row"><span>COINS</span><span id="sbCoins">0</span></div>
+      <div class="sb-row"><span>ALL TIME</span><span id="sbTotal">0</span></div>
+    </div>
     <button id="startBtn">START</button>
+    <div id="tapsHint" class="hidden">TAP / SPACE to fly</div>
   </div>
 </div>
 <script>
@@ -80,17 +115,47 @@ ctx.imageSmoothingEnabled = false;
 const sounds = {
   flap:      new Audio('assets/sounds/flap.mp3'),
   die:       new Audio('assets/sounds/die.mp3'),
+  hit:       new Audio('assets/sounds/flappy-bird-hit-sound.mp3'),
+  point:     new Audio('assets/sounds/point.mp3'),
+  swoosh:    new Audio('assets/sounds/swoosh.mp3'),
+  blast:     new Audio('assets/sounds/blast.mp3'),
   mainTheme: new Audio('assets/sounds/MainTheme.mp3')
 };
 sounds.mainTheme.loop   = true;
-sounds.mainTheme.volume = 0.5;
+sounds.mainTheme.volume = 0.45;
 sounds.flap.volume      = 0.7;
 sounds.die.volume       = 0.8;
+sounds.hit.volume       = 0.8;
+sounds.point.volume     = 0.6;
+sounds.swoosh.volume    = 0.5;
+sounds.blast.volume     = 0.7;
 
 function playSound(snd) {
   snd.currentTime = 0;
   snd.play().catch(() => {});
 }
+
+// Extra image assets
+function _loadImg(src) { const i = new Image(); i.src = src; return i; }
+const imgs = {
+  coin:  _loadImg('assets/images/coin.png'),
+  blast: _loadImg('assets/images/blast.png'),
+  home:  _loadImg('assets/images/flappy-bird-home.png'),
+};
+const imgLoaded = {};
+Object.keys(imgs).forEach(k => {
+  imgs[k].onload  = () => { imgLoaded[k] = true; };
+  imgs[k].onerror = () => { imgLoaded[k] = false; };
+});
+
+// Extra state
+let coinCount  = 0;
+let totalCoins = parseInt(localStorage.getItem('flippy-total-coins') || '0');
+let bestScore  = parseInt(localStorage.getItem('flippy-best') || '0');
+let PIPE_SPEED = 1.5;
+let PIPE_GAP   = 165;
+let floaters   = [];
+let coins = [], coinSpawnCount = 0;
 
 canvas.width = 400;
 canvas.height = 600;
@@ -159,8 +224,6 @@ const pipeSprites = {
 };
 
 const PIPE_WIDTH = 70;
-const PIPE_GAP = 160;
-const PIPE_SPEED = 1.5;
 const PIPE_INTERVAL = 1800;
 
 let pipes = [];
@@ -178,26 +241,29 @@ function spawnPipe() {
   const minTop = 80;
   const maxTop = canvas.height - PIPE_GAP - 180;
   const topHeight = getRandomInt(minTop, maxTop);
-  const vy = score >= 20 ? (Math.random() < 0.5 ? 1 : -1) * (1 + Math.random() * 1.5) : 0;
-  pipes.push({ x: canvas.width, topHeight, bottomY: topHeight + PIPE_GAP, width: PIPE_WIDTH, scored: false, vy });
+  const pipe = { x: canvas.width, topHeight, bottomY: topHeight + PIPE_GAP, width: PIPE_WIDTH, scored: false, vy: 0 };
+  pipes.push(pipe);
+  // Spawn a continuous horizontal stream of coins in the gap on every pipe
+  const gapMid  = topHeight + PIPE_GAP / 2;
+  const spread  = Math.min(PIPE_GAP / 2 - 18, 36);
+  const coinCount_spawned = 5;
+  const coinSpacing = 34;
+  const startX  = canvas.width + PIPE_WIDTH + 10;
+  for (let i = 0; i < coinCount_spawned; i++) {
+    const offsetY = (i % 2 === 0 ? 1 : -1) * (i < 2 ? 0 : spread * 0.5);
+    coins.push({
+      x: startX + i * coinSpacing,
+      y: gapMid + offsetY - 12,
+      w: 22, h: 22,
+      bobOffset: (Math.PI * 2 / coinCount_spawned) * i,
+      angle: 0, collected: false, alpha: 1
+    });
+  }
 }
 
 function updatePipes(currentTime) {
   if (currentTime - lastPipeTime > PIPE_INTERVAL) { spawnPipe(); lastPipeTime = currentTime; }
-  const minTop = 60;
-  const maxTop = canvas.height - PIPE_GAP - 160;
-  pipes.forEach(p => {
-    p.x -= PIPE_SPEED;
-    if (score >= 20 && p.vy === 0) {
-      p.vy = (Math.random() < 0.5 ? 1 : -1) * (1 + Math.random() * 1.5);
-    }
-    if (score >= 20 && p.vy !== 0) {
-      p.topHeight += p.vy;
-      if (p.topHeight <= minTop) { p.topHeight = minTop; p.vy = Math.abs(p.vy); }
-      if (p.topHeight >= maxTop) { p.topHeight = maxTop; p.vy = -Math.abs(p.vy); }
-      p.bottomY = p.topHeight + PIPE_GAP;
-    }
-  });
+  pipes.forEach(p => { p.x -= PIPE_SPEED; });
   pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
 }
 
@@ -215,7 +281,10 @@ function checkCollision() {
 
 function checkScore() {
   for (const p of pipes) {
-    if (!p.scored && p.x + PIPE_WIDTH < bird.x) { p.scored = true; score++; }
+    if (!p.scored && p.x + PIPE_WIDTH < bird.x) {
+      p.scored = true; score++;
+      playSound(sounds.point);
+    }
   }
 }
 
@@ -260,32 +329,45 @@ function drawPipes() {
   });
 }
 
-function drawScore() {
+function drawHUD() {
   if (gameState !== 'playing') return;
   ctx.save();
-  ctx.fillStyle = '#fff';
+  // Score centre
+  ctx.fillStyle   = '#fff';
   ctx.strokeStyle = '#000';
-  ctx.lineWidth = 3;
-  ctx.font = 'bold 36px Arial';
-  ctx.textAlign = 'center';
+  ctx.lineWidth   = 3;
+  ctx.font        = 'bold 36px Arial';
+  ctx.textAlign   = 'center';
   ctx.strokeText(score, canvas.width / 2, 60);
   ctx.fillText(score, canvas.width / 2, 60);
+  // Session coin counter top-right
+  ctx.textAlign   = 'right';
+  ctx.font        = 'bold 16px Arial';
+  ctx.strokeText('\uD83E\uDE99 ' + coinCount, canvas.width - 10, 30);
+  ctx.fillStyle   = '#FFD700';
+  ctx.fillText('\uD83E\uDE99 ' + coinCount, canvas.width - 10, 30);
   ctx.restore();
 }
 
 function showStartUI() {
+  document.getElementById('gameTitle').classList.remove('hidden');
   document.getElementById('gameOverText').classList.add('hidden');
-  document.getElementById('scoreDisplay').classList.add('hidden');
+  document.getElementById('scoreBoard').classList.add('hidden');
   document.getElementById('startBtn').textContent = 'START';
+  document.getElementById('tapsHint').classList.remove('hidden');
   document.getElementById('overlay').classList.remove('hidden');
 }
 
 function showGameOverUI() {
+  document.getElementById('gameTitle').classList.add('hidden');
   document.getElementById('gameOverText').classList.remove('hidden');
-  const sd = document.getElementById('scoreDisplay');
-  sd.textContent = 'Score: ' + score;
-  sd.classList.remove('hidden');
+  document.getElementById('sbScore').textContent = score;
+  document.getElementById('sbBest').textContent  = bestScore;
+  document.getElementById('sbCoins').textContent = coinCount;
+  document.getElementById('sbTotal').textContent = totalCoins;
+  document.getElementById('scoreBoard').classList.remove('hidden');
   document.getElementById('startBtn').textContent = 'RESTART';
+  document.getElementById('tapsHint').classList.add('hidden');
   document.getElementById('overlay').classList.remove('hidden');
 }
 
@@ -299,28 +381,26 @@ function startGame() {
   bird.velocity = bird.jumpStrength;
   bird.rotation = 0;
   bird.currentFrame = 0;
-  pipes = [];
-  lastPipeTime = 0;
-  score = 0;
-  bgX = 0;
-  groundX = 0;
+  pipes = []; lastPipeTime = 0;
+  score = 0; coinCount = 0;
+  coins = []; coinSpawnCount = 0;
+  floaters = [];
+  bgX = 0; groundX = 0;
   gameState = 'playing';
   hideUI();
-  sounds.die.pause();
-  sounds.die.currentTime = 0;
-  playSound(sounds.mainTheme);
-
-  // Reset rocket system
+  sounds.die.pause(); sounds.die.currentTime = 0;
+  playSound(sounds.swoosh);
+  setTimeout(() => playSound(sounds.mainTheme), 300);
   rocketSystem.reset();
 }
 
-function triggerGameOver() {
+function triggerGameOver(byPipe) {
   if (gameState !== 'playing') return;
   gameState = 'dead';
   bird.velocity = -3;
-  sounds.mainTheme.pause();
-  sounds.mainTheme.currentTime = 0;
-  playSound(sounds.die);
+  if (score > bestScore) { bestScore = score; localStorage.setItem('flippy-best', bestScore); }
+  sounds.mainTheme.pause(); sounds.mainTheme.currentTime = 0;
+  if (byPipe) playSound(sounds.hit); else playSound(sounds.die);
   showGameOverUI();
 }
 
@@ -390,10 +470,6 @@ function drawBird(currentTime) {
   }
   ctx.restore();
 }
-
-// ─────────────────────────────────────────────
-//  ROCKET SYSTEM (referenced from user's code)
-// ─────────────────────────────────────────────
 
 class Rocket {
   constructor(canvas, rocketImage, imageLoaded, customY = null, customSpeed = null, customXOffset = 0) {
@@ -690,6 +766,7 @@ class RocketSystem {
   }
 
   _spawnExplosion(x, y) {
+    playSound(sounds.blast);
     const colors = ['#FF4500', '#FFA500', '#FFD700', '#FF0000', '#FFFF00'];
     const explosion = { particles: [], flashAlpha: 1, flashTimer: 10, x, y };
     for (let i = 0; i < 20; i++) {
@@ -705,6 +782,7 @@ class RocketSystem {
         size: 10, alpha: 0.5, life: 40, maxLife: 40, color: '#555555', gravity: -0.02, decay: 0.97 });
     }
     explosion.shockwave = { x, y, radius: 5, maxRadius: 80, alpha: 0.8, speed: 4 };
+    explosion.blastImg  = { x, y, alpha: 1, scale: 0.3, growSpeed: 0.15 };
     this.explosions.push(explosion);
   }
 
@@ -717,6 +795,11 @@ class RocketSystem {
         exp.shockwave.alpha *= 0.92;
         if (exp.shockwave.radius >= exp.shockwave.maxRadius) exp.shockwave = null;
       }
+      if (exp.blastImg) {
+        exp.blastImg.scale += exp.blastImg.growSpeed;
+        exp.blastImg.alpha -= 0.05;
+        if (exp.blastImg.alpha <= 0) exp.blastImg = null;
+      }
       let allDead = true;
       for (let i = exp.particles.length - 1; i >= 0; i--) {
         const p = exp.particles[i];
@@ -726,7 +809,7 @@ class RocketSystem {
         if (p.life <= 0) exp.particles.splice(i, 1);
         else allDead = false;
       }
-      if (allDead && exp.flashTimer <= 0 && !exp.shockwave) this.explosions.splice(e, 1);
+      if (allDead && exp.flashTimer <= 0 && !exp.shockwave && !exp.blastImg) this.explosions.splice(e, 1);
     }
   }
 
@@ -768,6 +851,13 @@ class RocketSystem {
         ctx.save(); ctx.globalAlpha = sw.alpha; ctx.strokeStyle = '#FFA500'; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
       }
+      if (exp.blastImg && imgLoaded.blast) {
+        const bi = exp.blastImg;
+        const bw = 80 * bi.scale, bh = 80 * bi.scale;
+        ctx.save(); ctx.globalAlpha = bi.alpha;
+        ctx.drawImage(imgs.blast, exp.x - bw / 2, exp.y - bh / 2, bw, bh);
+        ctx.restore();
+      }
       for (const p of exp.particles) {
         ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
@@ -789,24 +879,92 @@ class RocketSystem {
   }
 }
 
-// ── Init rocket system ──
 const rocketSystem = new RocketSystem();
 rocketSystem.init(canvas);
 
-// ── Show start UI ──
+// ─── COIN UPDATE / DRAW ───
+function updateCoins() {
+  coins.forEach(c => {
+    c.x -= PIPE_SPEED; c.bobOffset += 0.06; c.angle += 0.04;
+    if (c.collected) { c.y -= 1.5; c.alpha -= 0.05; }
+  });
+  const b = bird.getBounds();
+  for (const c of coins) {
+    if (c.collected) continue;
+    if (b.x < c.x + c.w && b.x + b.width > c.x && b.y < c.y + c.h && b.y + b.height > c.y) {
+      c.collected = true; coinCount++; totalCoins++;
+      localStorage.setItem('flippy-total-coins', totalCoins);
+      playSound(sounds.point);
+      spawnFloatingText('+\uD83E\uDE99', c.x + c.w / 2, c.y, '#FFD700', 20);
+    }
+  }
+  coins = coins.filter(c => c.x + c.w > -10 && c.alpha > 0);
+}
+
+function drawCoins() {
+  coins.forEach(c => {
+    const cy = c.y + c.h / 2 + Math.sin(c.bobOffset) * 3;
+    ctx.save();
+    ctx.globalAlpha = c.alpha;
+    ctx.translate(c.x + c.w / 2, cy);
+    ctx.rotate(c.angle);
+    const sx = Math.abs(Math.cos(c.angle));
+    ctx.scale(Math.max(sx, 0.1), 1);
+    if (imgLoaded.coin) {
+      ctx.drawImage(imgs.coin, -c.w / 2, -c.h / 2, c.w, c.h);
+    } else {
+      ctx.fillStyle = '#FFD700'; ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(0, 0, c.w / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
+  });
+}
+
+// ─── FLOATING TEXT ───
+function spawnFloatingText(text, x, y, color, size) {
+  floaters.push({ text, x, y, color, size, alpha: 1, life: 55 });
+}
+function drawFloaters() {
+  for (let i = floaters.length - 1; i >= 0; i--) {
+    const f = floaters[i];
+    f.y -= 1.1; f.life--; f.alpha = f.life / 55;
+    if (f.life <= 0) { floaters.splice(i, 1); continue; }
+    ctx.save();
+    ctx.globalAlpha = f.alpha; ctx.fillStyle = f.color;
+    ctx.strokeStyle = '#000'; ctx.lineWidth = 3;
+    ctx.font = `bold ${f.size}px Arial Black, Arial`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    ctx.strokeText(f.text, f.x, f.y); ctx.fillText(f.text, f.x, f.y);
+    ctx.restore();
+  }
+}
+
+// ─── HOME SCREEN GRAPHIC ───
+function drawHomeScreen() {
+  if (gameState !== 'start') return;
+  if (imgLoaded.home) {
+    ctx.save();
+    const hw = Math.min(canvas.width * 0.7, 270);
+    const ratio = (imgs.home.naturalHeight || 200) / (imgs.home.naturalWidth || 280);
+    ctx.drawImage(imgs.home,
+      (canvas.width - hw) / 2, canvas.height * 0.08,
+      hw, Math.min(hw * ratio, canvas.height * 0.38));
+    ctx.restore();
+  }
+}
+
 showStartUI();
 
 function clearAllPipes() {
   pipes = [];
-  lastPipeTime = performance.now(); // reset spawn timer
+  lastPipeTime = performance.now();
 }
 
 function loop(currentTime) {
-  // Scrolling
   if (gameState === 'playing') {
-    bgX -= bgSpeed;
+    bgX -= 0.3;
     if (bgX <= -backgroundSprite.width) bgX = 0;
-    groundX -= 1.5;
+    groundX -= PIPE_SPEED;
     if (groundX <= -20) groundX = 0;
   }
 
@@ -817,23 +975,18 @@ function loop(currentTime) {
     bird.rotation = Math.min(Math.max(bird.velocity * 5, -30), 90);
 
     if (bird.y < 0) { bird.y = 0; bird.velocity = 0; }
-    if (bird.y + bird.height >= GROUND_Y) { bird.y = GROUND_Y - bird.height; triggerGameOver(); }
+    if (bird.y + bird.height >= GROUND_Y) { bird.y = GROUND_Y - bird.height; triggerGameOver(true); }
 
-    if (!rocketSystem.waveActive) {
-      updatePipes(currentTime);
-    }
+    if (!rocketSystem.waveActive) updatePipes(currentTime);
     checkScore();
-    if (checkCollision()) { triggerGameOver(); }
+    if (checkCollision()) { triggerGameOver(true); }
 
-    // Update & collision-check rockets
+    updateCoins();
+
     const wasWaveActive = rocketSystem.waveActive;
     rocketSystem.update(score);
-    // Wave just ended — spawn a pipe immediately so player isn't left waiting
-    if (wasWaveActive && !rocketSystem.waveActive) {
-      spawnPipe();
-      lastPipeTime = currentTime;
-    }
-    if (rocketSystem.checkCollision(bird)) { triggerGameOver(); }
+    if (wasWaveActive && !rocketSystem.waveActive) { spawnPipe(); lastPipeTime = currentTime; }
+    if (rocketSystem.checkCollision(bird)) { triggerGameOver(false); }
   }
 
   if (gameState === 'dead') {
@@ -842,18 +995,19 @@ function loop(currentTime) {
     bird.y += bird.velocity;
     bird.rotation = 90;
     if (bird.y + bird.height >= GROUND_Y) bird.y = GROUND_Y - bird.height;
-    // Keep updating explosions while dead so they finish animating
     rocketSystem.update(score);
   }
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   drawBackground();
+  drawHomeScreen();
   drawPipes();
-  // Draw rockets between pipes and ground so ground renders on top
+  drawCoins();
   rocketSystem.draw();
   drawGround();
   drawBird(currentTime);
-  drawScore();
+  drawHUD();
+  drawFloaters();
 
   requestAnimationFrame(loop);
 }
