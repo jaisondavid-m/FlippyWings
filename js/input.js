@@ -4,6 +4,7 @@
 
 // ── Canvas click / tap ──────────────────
 canvas.addEventListener('click', () => {
+  if (gameState === 'start') { startGame(); return; }
   if (gameState !== 'playing') return;
   if (isPaused) { togglePause(); return; }
   flap();
@@ -11,6 +12,7 @@ canvas.addEventListener('click', () => {
 
 canvas.addEventListener('touchstart', e => {
   e.preventDefault();
+  if (gameState === 'start') { startGame(); return; }
   if (gameState !== 'playing') return;
   if (isPaused) { togglePause(); return; }
   flap();
@@ -20,6 +22,7 @@ canvas.addEventListener('touchstart', e => {
 document.addEventListener('keydown', e => {
   if (e.code === 'Space' || e.code === 'ArrowUp') {
     e.preventDefault();
+    if (gameState === 'start') { startGame(); return; }
     if (gameState === 'playing' && isPaused) { togglePause(); return; }
     flap();
   }

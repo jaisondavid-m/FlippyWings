@@ -55,12 +55,15 @@ function triggerGameOver(byPipe) {
 function loop(now) {
 
   /* ── Update phase ── */
-  if (gameState === 'playing' && !isPaused) {
-    // Scroll background
+  // Scroll background on play and start screens
+  if ((gameState === 'playing' && !isPaused) || gameState === 'start') {
     bgX -= BG_SPEED;
     if (bgX <= -bgSprite.width) bgX = 0;
     groundX -= GROUND_SPEED;
     if (groundX <= -20) groundX = 0;
+  }
+
+  if (gameState === 'playing' && !isPaused) {
 
     // Bird physics
     bird.velocity += bird.gravity;
@@ -110,19 +113,13 @@ function loop(now) {
   drawPipes();
   drawCoins();
   rocketSystem.draw();
-  if (gameState !== 'start') drawGround();
+  drawGround();
   if (gameState !== 'start') drawBird(now);
   drawHUD();
   drawFloaters();
   drawPauseOverlay();
   drawSidePreview();
   drawLeftPreview();
-
-  // Keep START button pinned just below the home image
-  if (gameState === 'start') {
-    document.getElementById('startBtn').style.top =
-      (homeImgBottomPct * 100 + 2) + '%';
-  }
 
   requestAnimationFrame(loop);
 }

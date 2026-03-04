@@ -17,11 +17,10 @@ function spawnCoinsForPipe(topH) {
     const oY = (i % 2 === 0 ? 1 : -1) * spread * 0.4;
     coins.push({
       x:         startX + i * spacing,
-      y:         gapMid + oY - 11,
-      w:         22,
-      h:         22,
+      y:         gapMid + oY - 14,
+      w:         28,
+      h:         28,
       bobOffset: (Math.PI * 2 / Math.max(count, 1)) * i,
-      angle:     0,
       collected: false,
       alpha:     1,
     });
@@ -34,7 +33,6 @@ function updateCoins() {
   coins.forEach(c => {
     c.x         -= PIPE_SPEED;
     c.bobOffset += 0.06;
-    c.angle     += 0.04;
 
     if (c.collected) {
       c.y     -= 1.5;
@@ -64,30 +62,39 @@ function updateCoins() {
 
 function drawCoins() {
   coins.forEach(c => {
-    const cy = c.y + c.h / 2 + Math.sin(c.bobOffset) * 3;
+    const cx = c.x + c.w / 2;
+    const cy = c.y + c.h / 2 + Math.sin(c.bobOffset) * 4;
     ctx.save();
     ctx.globalAlpha = c.alpha;
-    ctx.translate(c.x + c.w / 2, cy);
-    ctx.rotate(c.angle);
-    const sx = Math.abs(Math.cos(c.angle));
-    ctx.scale(Math.max(sx, 0.1), 1);
 
     if (imgOK.coin) {
-      ctx.drawImage(imgs.coin, -c.w / 2, -c.h / 2, c.w, c.h);
+      ctx.drawImage(imgs.coin, cx - c.w / 2, cy - c.h / 2, c.w, c.h);
     } else {
-      // Fallback coin shape
-      ctx.fillStyle   = '#FFD700';
-      ctx.strokeStyle = '#B8860B';
-      ctx.lineWidth   = 2;
+      // Fallback: gold circle with inner shine ring
+      ctx.translate(cx, cy);
+      const r = c.w / 2;
+      // Outer glow
+      ctx.shadowColor  = 'rgba(255,215,0,0.7)';
+      ctx.shadowBlur   = 8;
+      ctx.fillStyle    = '#FFD700';
+      ctx.strokeStyle  = '#B8860B';
+      ctx.lineWidth    = 2.5;
       ctx.beginPath();
-      ctx.arc(0, 0, c.w / 2, 0, Math.PI * 2);
+      ctx.arc(0, 0, r, 0, Math.PI * 2);
       ctx.fill();
       ctx.stroke();
-      ctx.fillStyle    = '#FFF8DC';
-      ctx.font         = 'bold 10px Arial';
+      // Inner shine
+      ctx.shadowBlur   = 0;
+      ctx.fillStyle    = 'rgba(255,255,200,0.55)';
+      ctx.beginPath();
+      ctx.arc(-r * 0.22, -r * 0.22, r * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+      // $ symbol
+      ctx.fillStyle    = '#7a5c00';
+      ctx.font         = `bold ${Math.round(r)}px Arial`;
       ctx.textAlign    = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('$', 0, 0);
+      ctx.fillText('$', 0, 1);
     }
 
     ctx.restore();

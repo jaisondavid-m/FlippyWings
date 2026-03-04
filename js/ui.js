@@ -12,21 +12,19 @@ function updateDesktopScores() {
 
 /** Show the start / title screen UI. */
 function showStartUI() {
-  const overlay  = document.getElementById('overlay');
-  const startBtn = document.getElementById('startBtn');
+  const overlay = document.getElementById('overlay');
 
   document.getElementById('gameTitle').classList.add('hidden');
   document.getElementById('gameOverText').classList.add('hidden');
   document.getElementById('scoreBoard').classList.add('hidden');
   document.getElementById('tapsHint').classList.add('hidden');
+  document.getElementById('startBtn').classList.add('hidden');
   document.getElementById('pauseBtn').classList.add('hidden');
   document.getElementById('coinHUD').classList.add('hidden');
 
-  startBtn.textContent = 'START';
-  startBtn.style.top   = '';
-
-  overlay.classList.remove('hidden');
-  overlay.classList.add('start-mode');
+  // Entire overlay hidden — start screen is pure canvas
+  overlay.classList.add('hidden');
+  overlay.classList.remove('start-mode');
   updateDesktopScores();
 }
 
@@ -35,8 +33,7 @@ function showGameOverUI() {
   const overlay  = document.getElementById('overlay');
   const startBtn = document.getElementById('startBtn');
 
-  overlay.classList.remove('start-mode');
-  startBtn.style.top = '';
+  overlay.classList.remove('start-mode', 'hidden');
 
   document.getElementById('gameTitle').classList.add('hidden');
   document.getElementById('gameOverText').classList.remove('hidden');
@@ -50,17 +47,15 @@ function showGameOverUI() {
   document.getElementById('coinHUD').classList.add('hidden');
 
   startBtn.textContent = 'RESTART';
-  overlay.classList.remove('hidden');
+  startBtn.classList.remove('hidden');
   updateDesktopScores();
 }
 
 /** Hide the overlay while the player is actively playing. */
 function showPlayingUI() {
-  const overlay  = document.getElementById('overlay');
-  const startBtn = document.getElementById('startBtn');
+  const overlay = document.getElementById('overlay');
 
   overlay.classList.remove('start-mode');
-  startBtn.style.top = '';
   overlay.classList.add('hidden');
 
   document.getElementById('pauseBtn').classList.remove('hidden');

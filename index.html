@@ -90,22 +90,22 @@ canvas {
 
 /* Buttons */
 #startBtn {
-  background: linear-gradient(to bottom, #f5a623, #e08c10);
+  background: linear-gradient(to bottom, #FFE135 0%, #F5A623 50%, #E08C10 100%);
   color: #fff;
   border: none;
-  border-radius: 30px;
-  padding: 14px 52px;
-  font-size: 22px;
+  border-radius: 40px;
+  padding: 16px 60px;
+  font-size: 24px;
   font-family: 'Arial Black', Arial, sans-serif;
   font-weight: 900;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   cursor: pointer;
-  box-shadow: 0 6px 0 #a05e00, 0 8px 20px rgba(0,0,0,0.5);
+  box-shadow: 0 7px 0 #8a4d00, 0 10px 28px rgba(0,0,0,0.5);
   transition: transform 0.1s, box-shadow 0.1s;
-  text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  text-shadow: 1px 2px 0 rgba(0,0,0,0.35);
 }
-#startBtn:hover { transform: translateY(-2px); box-shadow: 0 8px 0 #a05e00; }
-#startBtn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a05e00; }
+#startBtn:hover  { transform: translateY(-3px); box-shadow: 0 10px 0 #8a4d00, 0 14px 28px rgba(0,0,0,0.5); }
+#startBtn:active { transform: translateY(5px);  box-shadow: 0 2px 0  #8a4d00; }
 
 #tapsHint {
   color: rgba(255,255,255,0.9);
@@ -116,36 +116,54 @@ canvas {
 }
 @keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
-/* Pause overlay button */
+/* Pause button — top-left pill badge */
 #pauseBtn {
   position: absolute;
   top: 12px; left: 12px;
-  background: rgba(0,0,0,0.55);
-  border: 2px solid rgba(255,255,255,0.4);
-  border-radius: 10px;
+  background: rgba(0,0,0,0.62);
+  border: 2px solid rgba(255,255,255,0.35);
+  border-radius: 50px;
   color: #fff;
-  font-size: 20px;
-  padding: 6px 12px;
+  font-size: 18px;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  padding: 7px 16px;
+  line-height: 1;
   cursor: pointer;
   pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   transition: background 0.15s;
+  user-select: none;
+  white-space: nowrap;
 }
-#pauseBtn:hover { background: rgba(0,0,0,0.8); }
+#pauseBtn:hover { background: rgba(0,0,0,0.85); }
 
-/* Coin HUD top-right */
+/* Coin HUD — top-right pill badge (mirrors pause btn) */
 #coinHUD {
   position: absolute;
-  top: 10px; right: 12px;
+  top: 12px; right: 12px;
+  background: rgba(0,0,0,0.62);
+  border: 2px solid rgba(255,215,0,0.5);
+  border-radius: 50px;
   color: #FFD700;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 900;
-  text-shadow: 1px 1px 0 #000, 0 0 8px rgba(255,215,0,0.6);
+  font-family: 'Arial Black', Arial, sans-serif;
+  padding: 7px 16px;
+  line-height: 1;
+  text-shadow: 1px 1px 0 rgba(0,0,0,0.8);
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .hidden { display: none !important; }
 
-/* Start screen: overlay fills ui so button sits below image */
+/* Start screen: START button fixed in lower-middle area */
 #overlay.start-mode {
   position: absolute;
   top: 0; left: 0; width: 100%; height: 100%;
@@ -153,6 +171,7 @@ canvas {
 }
 #overlay.start-mode #startBtn {
   position: absolute;
+  top: 56%;
   left: 50%;
   transform: translateX(-50%);
 }
