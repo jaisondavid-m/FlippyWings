@@ -77,8 +77,8 @@ function loop(now) {
       triggerGameOver(true);
     }
 
-    // Pipes (suppressed during rocket wave)
-    if (!rocketSystem.waveActive) updatePipes(now);
+    // Pipes: always scroll existing pipes; only spawn new ones outside rocket wave
+    updatePipes(now, !rocketSystem.waveActive);
     checkPipeScore();
     if (checkPipeCollision()) triggerGameOver(true);
 
@@ -203,6 +203,53 @@ function drawSidePreview() {
       previewCtx.fillRect(drawX - 5, p.bottomY, PIPE_WIDTH + 10, 28);
     }
   });
+
+  // ── Rockets (those still to the right of the game canvas)
+  if (gameState === 'playing' && rocketSystem && rocketSystem.rockets) {
+    rocketSystem.rockets.forEach(r => {
+      if (r.showWarning) return;          // skip during warning phase
+      const drawX = r.x - 400;
+      if (drawX + r.width < 0 || drawX > pw) return;
+      previewCtx.save();
+      previewCtx.translate(drawX + r.width / 2, r.y + r.height / 2);
+      previewCtx.rotate(-Math.PI / 2);
+      if (imgOK.rocket) {
+        previewCtx.drawImage(
+          imgs.rocket,
+          r.sprite.x, r.sprite.y, r.sprite.width, r.sprite.height,
+          -r.width / 2, -r.height / 2, r.width, r.height
+        );
+      } else {
+        previewCtx.fillStyle = '#CC0000';
+        previewCtx.beginPath();
+        previewCtx.ellipse(0, 0, r.width / 2, r.height / 2, 0, 0, Math.PI * 2);
+        previewCtx.fill();
+      }
+      previewCtx.restore();
+    });
+  }
+
+  // ── Coins (those still to the right of the game canvas)
+  if (gameState === 'playing' && coins) {
+    coins.forEach(c => {
+      const drawX = c.x - 400;
+      if (drawX + c.w < 0 || drawX > pw) return;
+      const cx = drawX + c.w / 2;
+      const cy = c.y + c.h / 2 + Math.sin(c.bobOffset) * 4;
+      previewCtx.save();
+      previewCtx.globalAlpha = c.alpha;
+      if (imgOK.coin) {
+        previewCtx.drawImage(imgs.coin, cx - c.w / 2, cy - c.h / 2, c.w, c.h);
+      } else {
+        previewCtx.fillStyle = '#FFD700';
+        previewCtx.beginPath();
+        previewCtx.arc(cx, cy, c.w / 2, 0, Math.PI * 2);
+        previewCtx.fill();
+      }
+      previewCtx.restore();
+    });
+    previewCtx.globalAlpha = 1;
+  }
 
   // ── Ground (continuation from game canvas right edge)
   if (spriteLoaded) {

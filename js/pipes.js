@@ -24,8 +24,8 @@ function spawnPipe(now) {
   spawnCoinsForPipe(topH);
 }
 
-function updatePipes(now) {
-  if (now - lastPipeTime > PIPE_INTERVAL) {
+function updatePipes(now, spawnAllowed = true) {
+  if (spawnAllowed && now - lastPipeTime > PIPE_INTERVAL) {
     spawnPipe(now);
     lastPipeTime = now;
   }

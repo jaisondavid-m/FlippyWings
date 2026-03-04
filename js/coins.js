@@ -10,7 +10,7 @@ function spawnCoinsForPipe(topH) {
   const gapMid  = topH + PIPE_GAP / 2;
   const count   = Math.random() < 0.5 ? 1 : 2;
   const spacing = 80;
-  const startX  = canvas.width + PIPE_WIDTH + 30;
+  const startX  = canvas.width + previewWidth + PIPE_WIDTH + 30;
   const spread  = Math.min(PIPE_GAP / 2 - 22, 28);
 
   for (let i = 0; i < count; i++) {

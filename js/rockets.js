@@ -184,7 +184,7 @@ const rocketSystem = {
     const now = Date.now();
     if (!this.waveActive && sc >= this.nextWaveScore) {
       this._startWave();
-      clearAllPipes();
+      // pipes scroll off naturally — no instant clear
     }
     if (this.waveActive && this.formationsSpawned < this.formationsPerWave) {
       if (now - this.lastSpawnTime >= this.nextSpawnDelay) {

@@ -164,31 +164,51 @@ canvas {
    PAUSE BUTTON (top-left during play)
 ───────────────────────────────────────── */
 #pauseBtn {
-  position: absolute;
+  position: fixed;
   top: 12px; left: 12px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 2px solid rgba(255, 255, 255, 0.4);
-  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.62);
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50px;
   color: #fff;
-  font-size: 20px;
-  padding: 6px 12px;
+  font-size: 18px;
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-weight: 900;
+  padding: 7px 14px;
+  line-height: 1;
   cursor: pointer;
   pointer-events: all;
+  display: flex;
+  align-items: center;
+  gap: 5px;
   transition: background 0.15s;
+  user-select: none;
+  white-space: nowrap;
+  z-index: 10;
 }
-#pauseBtn:hover { background: rgba(0, 0, 0, 0.8); }
+#pauseBtn:hover { background: rgba(0, 0, 0, 0.85); }
 
 /* ─────────────────────────────────────────
    COIN HUD (top-right during play)
 ───────────────────────────────────────── */
 #coinHUD {
-  position: absolute;
-  top: 10px; right: 12px;
+  position: fixed;
+  top: 12px; right: 12px;
+  background: rgba(0, 0, 0, 0.62);
+  border: 2px solid rgba(255, 215, 0, 0.55);
+  border-radius: 50px;
   color: #FFD700;
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 900;
-  text-shadow: 1px 1px 0 #000, 0 0 8px rgba(255, 215, 0, 0.6);
+  font-family: 'Arial Black', Arial, sans-serif;
+  padding: 7px 14px;
+  line-height: 1;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.8);
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  z-index: 10;
 }
 
 /* ─────────────────────────────────────────
@@ -219,15 +239,17 @@ canvas {
   }
 
   #pauseBtn {
-    font-size: 26px;
-    padding: 10px 18px;
-    top: 16px; left: 16px;
+    font-size: 20px;
+    padding: 9px 16px;
+    top: 14px; left: 14px;
   }
 
   #coinHUD {
-    font-size: 22px;
-    top: 16px; right: 18px;
+    font-size: 20px;
+    padding: 9px 16px;
+    top: 14px; right: 14px;
   }
+
 }
 
 /* ─────────────────────────────────────────
